@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Interaction Proxy provides a service through the Discord Bot (the "Bot"), or (the 'Service'). This service is provided to you by the Interaction Proxy Dev Team ('we' or 'us') for users ('you').
+Interaction Proxy provides a service through the Discord Integrations (the 'Service'). This service is provided to you by the Interaction Proxy Dev Team ('we' or 'us') for users ('you').
 
 ## Data We Collect
 
@@ -30,7 +30,7 @@ Messages:
 
 ### Data automatically collected
 
-All data is sent through and processed scripts hosted on Cloudflare workers. Cloudflares privacy policy can be found here [here](https://www.cloudflare.com/privacy)
+All data is sent through and processed scripts hosted on Cloudflare workers. Cloudflares privacy policy can be found [here](https://www.cloudflare.com/privacy)
 
 ## Where do we store your data
 
