@@ -40,7 +40,8 @@ async function listFronts(accountId: Snowflake): Promise<string[] | null> {
   const processedFronts: string[] = []
   for (let index = 0; index < keys.length; index++) {
     const { name } = keys[index]
-    processedFronts.push(name)
+    const splitData = name.split(separatorCharacter)
+    processedFronts.push(splitData[2])
   }
   if (processedFronts.length === 0) {
     return null

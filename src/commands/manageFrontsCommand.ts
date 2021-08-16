@@ -1,5 +1,6 @@
 import {
   APIApplicationCommandInteraction,
+  APIInteraction,
   APIInteractionResponseChannelMessageWithSource,
   ApplicationCommandInteractionDataOptionSubCommand,
   ApplicationCommandOptionType,
@@ -7,7 +8,7 @@ import {
   MessageFlags,
 } from 'discord-api-types/v9'
 import { InvalidRequest } from '../errors'
-import { addFront, getFront } from '../fronts'
+import { addFront, getFront, listFronts, removeFront } from '../fronts'
 import { DATA_SEPARATOR_CODE } from '../consts'
 
 const separatorCharacter = String.fromCharCode(DATA_SEPARATOR_CODE)
@@ -25,11 +26,74 @@ export async function handleManageFrontsCommand(
   switch (interaction.data.options[0].name) {
     case 'register':
       return await handleRegisterCommand(interaction)
-
+    case 'list':
+      return await handleListCommand(interaction)
     case 'get':
       return await handleGetCommand(interaction)
+    case 'delete':
+      return await handleDeleteCommand(interaction)
     default:
       throw new InvalidRequest('That application command was not found')
+  }
+}
+async function handleDeleteCommand(interaction: APIApplicationCommandInteraction): Promise<APIInteractionResponseChannelMessageWithSource> {
+  const user = (interaction.user || interaction.member?.user)!
+  const { options } = interaction.data
+    .options![0] as ApplicationCommandInteractionDataOptionSubCommand
+  if (
+    options.length === 0 ||
+    options[0].type != ApplicationCommandOptionType.String // identifier
+  ) {
+    throw new InvalidRequest(
+      'Incorrect options on "manage-fronts register" command',
+    )
+  }
+  const frontId = options[0].value
+  const front = await getFront(user.id, frontId)
+  let message = ""
+  if (front === null) {
+    message = `The front \`${frontId}\` has not be registered yet!`
+  } else {
+    await removeFront(user.id, frontId)
+    message = 'Front successfully removed!' +
+              "\nHere's the data just in case you need it:" +
+              `\nFront ID: \`${front.id}\`` +
+              `\nUsername: \`${front.username}\`` +
+              `\nAvatar URL: \`${front.avatarURL}\``
+  }
+  return {
+    type: InteractionResponseType.ChannelMessageWithSource,
+    data: {
+      content: message,
+      flags: MessageFlags.Ephemeral,
+    },
+  }
+}
+
+
+async function handleListCommand(
+  interaction: APIApplicationCommandInteraction,
+): Promise<APIInteractionResponseChannelMessageWithSource> {
+  const user = (interaction.user || interaction.member?.user)!
+  const fronts = await listFronts(user.id)
+  let message = ''
+  if (fronts === null) {
+    message = 'There are no fronts registered under this account!'
+  } else {
+    message = 'Fronts: `'
+    for (let index = 0; index < fronts.length; index++) {
+      message = message.concat(`${fronts[index]}\``)
+      if (index !== fronts.length - 1) {
+        message = message.concat(", \`")
+      }
+    }
+  }
+  return {
+    type: InteractionResponseType.ChannelMessageWithSource,
+    data: {
+      content: message,
+      flags: MessageFlags.Ephemeral,
+    },
   }
 }
 
@@ -123,7 +187,7 @@ async function handleGetCommand(
   if (existingFronts === null) {
     message = `The front with the id \`${options[0].value}\` hasn't been created yet!`
   } else {
-    message = `Front id: \`${existingFronts.id}\`\nAvatar URL: \`${existingFronts.avatarURL}\`\nUsername: \`${existingFronts.username}\``
+    message = `Front id: \`${existingFronts.id}\`\nUsername: \`${existingFronts.username}\`\nAvatar URL: \`${existingFronts.avatarURL}\``
   }
   return {
     type: InteractionResponseType.ChannelMessageWithSource,
