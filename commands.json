@@ -1,0 +1,84 @@
+[
+  {
+    "type": 1,
+    "name": "proxy",
+    "description": "Proxy a message to a specified front",
+    "options": [
+      {
+        "type": 3,
+        "name": "message",
+        "description": "The message to proxy",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "front",
+        "description": "The front to proxy the message to",
+        "required": true
+      }
+    ]
+  },
+  {
+    "type": 1,
+    "name": "manage-fronts",
+    "description": "Commands for managing fronts",
+    "options": [
+      {
+        "type": 1,
+        "name": "register",
+        "description": "Create a front",
+        "options": [
+          {
+            "type": 3,
+            "name": "identifier",
+            "description": "The identifier for the front. Make this something memorable. Must be less than 15 characters",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "username",
+            "description": "That name that'll be displayed when a message is proxied with this front",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "avatar-url",
+            "description": "A url to the image that'll be displayed as the avatar of this front",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "get",
+        "description": "Get a front's info",
+        "options": [
+          {
+            "type": 3,
+            "name": "identifier",
+            "description": "The identifier for the front",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "list",
+        "description": "List fronts under this account"
+      },
+      {
+        "type": 1,
+        "name": "delete",
+        "description": "Delete a front",
+        "options": [
+          {
+            "type": 3,
+            "name": "identifier",
+            "description": "The identifier for the front",
+            "required": true
+          }
+        ]
+      }
+    ]
+  }
+]
