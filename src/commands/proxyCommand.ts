@@ -23,20 +23,29 @@ export async function handleProxyCommand(
   if (interaction.guild_id === undefined) {
     throw new ReturnedError('This command can only be used in a server!')
   }
+  const frontId = interaction.data.options[1].value
+  const message = interaction.data.options[0].value
+  if (message.length > 2000) {
+    throw new ReturnedError(
+      `Messages must be 2000 characters or less! That message was ${
+        message.length - 2000
+      } characters above the limit`,
+    )
+  }
   const user = (interaction.user || interaction.member?.user)!
-  const frontData = await getFront(user.id, interaction.data.options[1].value)
+  const frontData = await getFront(user.id, frontId)
   if (frontData === null) {
     throw new ReturnedError(
-      `The front \`${interaction.data.options[1].value}\`could not be found in the database!`,
+      `The front \`${frontId}\`could not be found in the database!`,
     )
   }
   await sendProxyMessage(
-    interaction.data.options[0].value,
+    message,
     frontData.avatarURL,
     frontData.username,
     interaction.channel_id,
     user,
-    interaction.data.options[1].value,
+    frontId,
     event,
     interaction.guild_id,
   )
