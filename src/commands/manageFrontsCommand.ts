@@ -36,7 +36,9 @@ export async function handleManageFrontsCommand(
       throw new InvalidRequest('That application command was not found')
   }
 }
-async function handleDeleteCommand(interaction: APIApplicationCommandInteraction): Promise<APIInteractionResponseChannelMessageWithSource> {
+async function handleDeleteCommand(
+  interaction: APIApplicationCommandInteraction,
+): Promise<APIInteractionResponseChannelMessageWithSource> {
   const user = (interaction.user || interaction.member?.user)!
   const { options } = interaction.data
     .options![0] as ApplicationCommandInteractionDataOptionSubCommand
@@ -50,16 +52,17 @@ async function handleDeleteCommand(interaction: APIApplicationCommandInteraction
   }
   const frontId = options[0].value
   const front = await getFront(user.id, frontId)
-  let message = ""
+  let message = ''
   if (front === null) {
     message = `The front \`${frontId}\` has not be registered yet!`
   } else {
     await removeFront(user.id, frontId)
-    message = 'Front successfully removed!' +
-              "\nHere's the data just in case you need it:" +
-              `\nFront ID: \`${front.id}\`` +
-              `\nUsername: \`${front.username}\`` +
-              `\nAvatar URL: \`${front.avatarURL}\``
+    message =
+      'Front successfully removed!' +
+      "\nHere's the data just in case you need it:" +
+      `\nFront ID: \`${front.id}\`` +
+      `\nUsername: \`${front.username}\`` +
+      `\nAvatar URL: \`${front.avatarURL}\``
   }
   return {
     type: InteractionResponseType.ChannelMessageWithSource,
@@ -69,7 +72,6 @@ async function handleDeleteCommand(interaction: APIApplicationCommandInteraction
     },
   }
 }
-
 
 async function handleListCommand(
   interaction: APIApplicationCommandInteraction,
@@ -84,7 +86,7 @@ async function handleListCommand(
     for (let index = 0; index < fronts.length; index++) {
       message = message.concat(`${fronts[index]}\``)
       if (index !== fronts.length - 1) {
-        message = message.concat(", \`")
+        message = message.concat(', `')
       }
     }
   }
