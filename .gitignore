@@ -3,3 +3,6 @@ node_modules
 transpiled
 /.idea/
 wrangler.toml
+*/cloudflared
+/docker-database/start.sh
+/docker-database/scripts/create-tables.sql

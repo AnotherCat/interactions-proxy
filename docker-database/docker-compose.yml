@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2021.8.2
+    environment:
+      TUNNEL_URL: http://postgrest:3000
+    command: "tunnel run"
+    volumes:
+      - ./cloudflared:/etc/cloudflared
+    links:
+      - postgrest:postgrest
+    depends_on:
+      - postgrest
+
+  postgrest:
+    image: postgrest/postgrest
+    # Expose post 3000 and access postgrest locally by uncommenting 
+    # the `ports` directive below
+    # ports:
+    #   - "3000:3000"
+    environment:
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_URI: postgres://authenticator:${AUTH_PASSWORD}@postgres:5432/db
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+    links:
+      - postgres:postgres
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts:/scripts
+
+volumes:
+  postgres-data: {}

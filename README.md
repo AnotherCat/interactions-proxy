@@ -9,21 +9,4 @@ I do not intend for this to replace plural kit or other bots, I actually think p
 
 ## Setup
 
-Follow cloudflare workers instructions for setup with wrangler
-Create secrets: `wrangler secret put {secret name}`
-
-Secrets:
-
-- `publicSecurityKey`
-- `botToken`
-- `applicationId`
-
-Setup the kv namespace: `wrangler kv:namespace create "DATA_KV"`
-
-Constants (`consts.ts`) need to be set to values you want
-
-Register commands in `commands.json` to discord. See discord [docs](https://discord.dev) for this
-
-Publish the worker.
-
-The bot needs to be invited with both the `application.commands` scope and the `bot` scope. It must have the `MANAGE_PERMISSIONS` permission in each channel it's used in.
+Follow the instructions in each readme in each directory.

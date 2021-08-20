@@ -13,7 +13,9 @@ import {
   logAvatarURL,
   logChannelId,
   logUsername,
+  applicationId,
 } from './consts'
+import { createMessageInDatabase } from './pgData'
 const missingPermissionsMessage =
   'The bot does not have the right permissions in this channel! Please contact your server administrator for more detail. \nNote: this message is cached for 10 minutes'
 
@@ -38,18 +40,52 @@ export async function sendProxyMessage(
   const messageData = await retryWebhookOnFail(data, webhookData, channel)
 
   event.waitUntil(
-    sendLogMessage(
+    createLogs(
       message,
       avatar,
       name,
       channel,
       user,
-      webhookData,
       messageData!,
       proxyId,
       guild,
     ),
   )
+}
+
+async function createLogs(
+  message: string,
+  avatar: string,
+  username: string,
+  channel: Snowflake,
+  user: APIUser,
+  messageData: RESTPostAPIWebhookWithTokenWaitResult,
+  proxyId: string,
+  guild: Snowflake,
+) {
+  const logMessage = await sendLogMessage(
+    message,
+    avatar,
+    username,
+    channel,
+    user,
+    messageData,
+    proxyId,
+    guild,
+  )
+  const a = await createMessageInDatabase(
+    messageData.id,
+    messageData.channel_id,
+    user.id,
+    guild,
+    logMessage.id,
+    logMessage.channel_id,
+    proxyId,
+    username
+  )
+  if (!a.ok) {
+    await executeWebhook({content: `${a.status}\n${await a.text()}`}, await getWebhook(channel))
+  }
 }
 
 async function sendLogMessage(
@@ -58,11 +94,10 @@ async function sendLogMessage(
   username: string,
   channel: Snowflake,
   user: APIUser,
-  webhook: WebhookWithToken,
   messageData: RESTPostAPIWebhookWithTokenWaitResult,
   proxyId: string,
   guild: Snowflake,
-) {
+): Promise<RESTPostAPIWebhookWithTokenWaitResult> {
   const embed: APIEmbed = {
     title: 'Jump to message',
     url: `https://discord.com/channels/${guild}/${messageData.channel_id}/${messageData.id}`,
@@ -81,7 +116,7 @@ async function sendLogMessage(
     color: 3066993,
     timestamp: messageData.timestamp,
   }
-  await retryWebhookOnFail(
+  return await retryWebhookOnFail(
     {
       embeds: [embed],
       username: logUsername,

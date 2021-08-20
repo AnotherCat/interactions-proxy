@@ -1,13 +1,12 @@
 import {
   APIApplicationCommandInteraction,
-  APIInteraction,
   APIInteractionResponseChannelMessageWithSource,
   ApplicationCommandInteractionDataOptionSubCommand,
   ApplicationCommandOptionType,
   InteractionResponseType,
   MessageFlags,
 } from 'discord-api-types/v9'
-import { InvalidRequest } from '../errors'
+import { InvalidRequest, ReturnedError } from '../errors'
 import { addFront, getFront, listFronts, removeFront } from '../fronts'
 import { DATA_SEPARATOR_CODE } from '../consts'
 
@@ -121,6 +120,16 @@ async function handleRegisterCommand(
     avatarURL: options[2].value,
     id: options[0].value,
     accountId: user.id,
+  }
+  if (frontData.id.length > 15) {
+    throw new ReturnedError(
+      'The front identifer must be less than 15 characters',
+    )
+  }
+  if (frontData.username.length > 32) {
+    throw new ReturnedError(
+      'The front\'s username must be less than 32 characters',
+    )
   }
   if (
     frontData.username.includes(separatorCharacter) ||
