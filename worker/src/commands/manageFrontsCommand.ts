@@ -128,7 +128,15 @@ async function handleRegisterCommand(
   }
   if (frontData.username.length > 32) {
     throw new ReturnedError(
-      'The front\'s username must be less than 32 characters',
+      "The front's username must be less than 32 characters",
+    )
+  }
+  if (
+    !frontData.avatarURL.startsWith("https://") &&
+    !frontData.avatarURL.startsWith("http://") 
+  ) {
+    throw new ReturnedError(
+      "The front's avatar url must start with `http://` or `https://`",
     )
   }
   if (

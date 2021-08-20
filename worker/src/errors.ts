@@ -4,9 +4,9 @@ export class InvalidRequest extends Error {}
 export class MissingPermissions extends Error {}
 export class ReturnedError extends Error {}
 export class InternalRequestError extends Error {
-  status: number
-  constructor(message: string, status: number) {
+  response: Response
+  constructor(message: string, response: Response) {
     super(message)
-    this.status = status
+    this.response = response
   }
 }
