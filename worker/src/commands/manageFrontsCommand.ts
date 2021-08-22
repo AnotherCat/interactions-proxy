@@ -123,7 +123,7 @@ async function handleRegisterCommand(
     pronouns = options[3].value
     if (pronouns.length > 100) {
       throw new ReturnedError(
-        "The front's username must be less than 100 characters",
+        "The front's pronouns must be less than 100 characters",
       )
     }
   }
