@@ -1,15 +1,15 @@
 import {
-  APIApplicationCommandInteraction,
   APIInteractionResponseChannelMessageWithSource,
   ApplicationCommandOptionType,
   InteractionResponseType,
   MessageFlags,
 } from 'discord-api-types/v9'
+import { APIChatInputApplicationCommandInteraction } from '../api-types-for-the-timebeing'
 import { InvalidRequest, ReturnedError } from '../errors'
 import { getFront } from '../fronts'
 import { sendProxyMessage } from '../webhook'
 export async function handleProxyCommand(
-  interaction: APIApplicationCommandInteraction,
+  interaction: APIChatInputApplicationCommandInteraction,
   event: FetchEvent,
 ): Promise<APIInteractionResponseChannelMessageWithSource> {
   // Check types

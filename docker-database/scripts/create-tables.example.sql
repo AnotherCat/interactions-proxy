@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS public.messages(
     channel_id bigint not null,
     account_id bigint not null,
     guild_id bigint not null,
-    log_channel_id bigint,
-    log_message_id bigint,
+    log_channel_id bigint not null,
+    log_message_id bigint not null,
     proxy_id varchar(15) not null,
     proxy_name varchar(34) not null,
     CONSTRAINT UNIQUE_MESSAGE UNIQUE (message_id, channel_id)

@@ -142,10 +142,8 @@ async function retryWebhookOnFail(
   const messageData = await executeWebhook(data, webhook).catch(async function (
     error,
   ) {
-    if (error instanceof InternalRequestError){
-      if (
-        error.response.status === 404
-      ) {
+    if (error instanceof InternalRequestError) {
+      if (error.response.status === 404) {
         webhook = await handleWebhookNotFound(channel)
         await executeWebhook(data, webhook)
       } else {
@@ -153,21 +151,21 @@ async function retryWebhookOnFail(
         let jsonBody = null
         try {
           jsonBody = JSON.parse(textBody)
-        } catch (error) {} 
+        } catch (error) {
+          
+        }
         if (
           error.response.status === 400 &&
           jsonBody !== null &&
           'username' in jsonBody
         ) {
           throw new ReturnedError(
-            "The username was rejected by discord, please update the username for this front." +
-            `\nError: ${jsonBody.username}`
+            'The username was rejected by discord, please update the username for this front.' +
+              `\nError: ${jsonBody.username}`,
           )
         } else {
           throw new ReturnedError(
-            `Proxying failed with the status \`${
-              error.response.status
-            }\` and the error\`${textBody}\`` +
+            `Proxying failed with the status \`${error.response.status}\` and the error\`${textBody}\`` +
               '\nPlease copy this error and contact the developer with the error.',
           )
         }

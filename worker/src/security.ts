@@ -37,5 +37,4 @@ export async function verify(request: Request): Promise<boolean> {
     signature,
     encoder.encode(timestamp + unknown),
   )
-  console.log(5)
 }

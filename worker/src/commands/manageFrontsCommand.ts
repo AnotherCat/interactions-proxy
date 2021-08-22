@@ -9,11 +9,12 @@ import {
 import { InvalidRequest, ReturnedError } from '../errors'
 import { addFront, getFront, listFronts, removeFront } from '../fronts'
 import { DATA_SEPARATOR_CODE } from '../consts'
+import { APIChatInputApplicationCommandInteraction } from '../api-types-for-the-timebeing'
 
 const separatorCharacter = String.fromCharCode(DATA_SEPARATOR_CODE)
 
 export async function handleManageFrontsCommand(
-  interaction: APIApplicationCommandInteraction,
+  interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<APIInteractionResponseChannelMessageWithSource> {
   if (
     !interaction.data.options ||
@@ -21,7 +22,6 @@ export async function handleManageFrontsCommand(
   ) {
     throw new InvalidRequest('Incorrect options on "manage-fronts" command')
   }
-  console.log(interaction.data.options[0].name)
   switch (interaction.data.options[0].name) {
     case 'register':
       return await handleRegisterCommand(interaction)
@@ -36,7 +36,7 @@ export async function handleManageFrontsCommand(
   }
 }
 async function handleDeleteCommand(
-  interaction: APIApplicationCommandInteraction,
+  interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<APIInteractionResponseChannelMessageWithSource> {
   const user = (interaction.user || interaction.member?.user)!
   const { options } = interaction.data
@@ -73,7 +73,7 @@ async function handleDeleteCommand(
 }
 
 async function handleListCommand(
-  interaction: APIApplicationCommandInteraction,
+  interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<APIInteractionResponseChannelMessageWithSource> {
   const user = (interaction.user || interaction.member?.user)!
   const fronts = await listFronts(user.id)
@@ -99,7 +99,7 @@ async function handleListCommand(
 }
 
 async function handleRegisterCommand(
-  interaction: APIApplicationCommandInteraction,
+  interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<APIInteractionResponseChannelMessageWithSource> {
   const { options } = interaction.data
     .options![0] as ApplicationCommandInteractionDataOptionSubCommand
@@ -132,8 +132,8 @@ async function handleRegisterCommand(
     )
   }
   if (
-    !frontData.avatarURL.startsWith("https://") &&
-    !frontData.avatarURL.startsWith("http://") 
+    !frontData.avatarURL.startsWith('https://') &&
+    !frontData.avatarURL.startsWith('http://')
   ) {
     throw new ReturnedError(
       "The front's avatar url must start with `http://` or `https://`",
@@ -190,7 +190,7 @@ async function handleRegisterCommand(
 }
 
 async function handleGetCommand(
-  interaction: APIApplicationCommandInteraction,
+  interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<APIInteractionResponseChannelMessageWithSource> {
   const { options } = interaction.data
     .options![0] as ApplicationCommandInteractionDataOptionSubCommand

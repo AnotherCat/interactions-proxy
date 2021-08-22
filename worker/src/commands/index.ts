@@ -1,21 +1,82 @@
 import {
-  APIApplicationCommandInteraction,
   APIInteractionResponseChannelMessageWithSource,
+  APIInteractionResponseDeferredChannelMessageWithSource,
+  InteractionResponseType,
+  MessageFlags,
 } from 'discord-api-types/v9'
 import { InvalidRequest } from '../errors'
 import { handleProxyCommand } from './proxyCommand'
 import { handleManageFrontsCommand } from './manageFrontsCommand'
+import {
+  handleGetMessageInfoSlashCommand,
+  handleGetMessageInfoMessageCommand,
+} from './messageInfoCommand'
+import {
+  APIApplicationCommandInteraction,
+  APIChatInputApplicationCommandInteraction,
+  APIMessageApplicationCommandInteraction,
+  ApplicationCommandType,
+} from '../api-types-for-the-timebeing'
+import { executeDeferredInteractionHandleErrors } from '../utils'
 export async function handleCommands(
   interaction: APIApplicationCommandInteraction,
   event: FetchEvent,
-): Promise<APIInteractionResponseChannelMessageWithSource> {
-  console.log(interaction.data.name)
-  switch (interaction.data.name) {
-    case 'proxy':
-      return await handleProxyCommand(interaction, event)
-    case 'manage-fronts':
-      return await handleManageFrontsCommand(interaction)
+): Promise<
+  | APIInteractionResponseChannelMessageWithSource
+  | APIInteractionResponseDeferredChannelMessageWithSource
+> {
+  switch (interaction.data.type) {
+    case ApplicationCommandType.ChatInput:
+      switch (interaction.data.name) {
+        case 'proxy':
+          return await handleProxyCommand(
+            interaction as APIChatInputApplicationCommandInteraction,
+            event,
+          )
+        case 'manage-fronts':
+          return await handleManageFrontsCommand(
+            interaction as APIChatInputApplicationCommandInteraction,
+          )
+        case 'get-message-info':
+          event.waitUntil(
+            executeDeferredInteractionHandleErrors(
+              handleGetMessageInfoSlashCommand(
+                interaction as APIMessageApplicationCommandInteraction,
+              ),
+              interaction,
+            ),
+          )
+          return {
+            type: InteractionResponseType.DeferredChannelMessageWithSource,
+            data: {
+              flags: MessageFlags.Ephemeral,
+            },
+          }
+        default:
+          throw new InvalidRequest('That application command was not found')
+      }
+    case ApplicationCommandType.Message:
+      switch (interaction.data.name) {
+        case 'Get Message Info':
+          event.waitUntil(
+            executeDeferredInteractionHandleErrors(
+              handleGetMessageInfoMessageCommand(
+                interaction as APIMessageApplicationCommandInteraction,
+              ),
+              interaction,
+            ),
+          )
+          return {
+            type: InteractionResponseType.DeferredChannelMessageWithSource,
+            data: {
+              flags: MessageFlags.Ephemeral,
+            },
+          }
+        default:
+          throw new InvalidRequest('That application command was not found')
+      }
+
     default:
-      throw new InvalidRequest('That application command was not found')
+      throw new InvalidRequest('That application command type is not handled')
   }
 }
