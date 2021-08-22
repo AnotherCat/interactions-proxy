@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.messages(
     log_message_id bigint not null,
     proxy_id varchar(15) not null,
     proxy_name varchar(34) not null,
+    proxy_pronouns varchar(102),
     CONSTRAINT UNIQUE_MESSAGE UNIQUE (message_id, channel_id)
 );
 

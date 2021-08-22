@@ -113,11 +113,26 @@ async function handleRegisterCommand(
       'Incorrect options on "manage-fronts register" command',
     )
   }
+  let pronouns = null
+  if (options[3]) {
+    if (options[3].type != ApplicationCommandOptionType.String) {
+      throw new InvalidRequest(
+        'Incorrect options on "manage-fronts register" command',
+      )
+    }
+    pronouns = options[3].value
+    if (pronouns.length > 100) {
+      throw new ReturnedError(
+        "The front's username must be less than 100 characters",
+      )
+    }
+  }
   const user = (interaction.user || interaction.member?.user)!
   const existingFronts = await getFront(user.id, options[0].value)
   const frontData = {
     username: options[1].value,
     avatarURL: options[2].value,
+    pronouns: pronouns,
     id: options[0].value,
     accountId: user.id,
   }
@@ -129,6 +144,11 @@ async function handleRegisterCommand(
   if (frontData.username.length > 32) {
     throw new ReturnedError(
       "The front's username must be less than 32 characters",
+    )
+  }
+  if (frontData.avatarURL.length > 1000) {
+    throw new ReturnedError(
+      "The front's avatar URL must be less than 1000 characters",
     )
   }
   if (
@@ -157,6 +177,7 @@ async function handleRegisterCommand(
     if (
       existingFronts.avatarURL === frontData.avatarURL &&
       existingFronts.username === frontData.username &&
+      existingFronts.pronouns === frontData.pronouns &&
       existingFronts.accountId === frontData.accountId &&
       existingFronts.id === frontData.id
     ) {
@@ -202,11 +223,16 @@ async function handleGetCommand(
   }
   const user = (interaction.user || interaction.member?.user)!
   const existingFronts = await getFront(user.id, options[0].value)
+  
   let message = ''
   if (existingFronts === null) {
     message = `The front with the id \`${options[0].value}\` hasn't been created yet!`
   } else {
-    message = `Front id: \`${existingFronts.id}\`\nUsername: \`${existingFronts.username}\`\nAvatar URL: \`${existingFronts.avatarURL}\``
+    let pronounMessage = ""
+    if (existingFronts.pronouns) {
+      pronounMessage = `\n\Pronouns: \`${existingFronts.pronouns}\``
+    }
+    message = `Front id: \`${existingFronts.id}\`\nUsername: \`${existingFronts.username}\`${pronounMessage}\nAvatar URL: \`${existingFronts.avatarURL}\``
   }
   return {
     type: InteractionResponseType.ChannelMessageWithSource,

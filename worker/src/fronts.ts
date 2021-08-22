@@ -5,13 +5,14 @@ interface FrontType {
   avatarURL: string
   username: string
   accountId: Snowflake
+  pronouns: string | null
   // the front id
   id: string
 }
 
 const separatorCharacter = String.fromCharCode(DATA_SEPARATOR_CODE)
 
-// fronts are stored in the format. Key: "front${separatorCharacter}${accountid}${separatorCharacter}${frontid}" Value: "${avatarurl}${separatorCharacter}${username}"
+// fronts are stored in the format. Key: "front${separatorCharacter}${accountid}${separatorCharacter}${frontid}" Value: "${avatarurl}${separatorCharacter}${username}${separatorCharacter}${pronouns}"
 
 async function getFront(
   accountId: Snowflake,
@@ -24,10 +25,15 @@ async function getFront(
     return null
   } else {
     const splitData = data.split(separatorCharacter)
+    let pronouns = null
+    if (splitData[2]) {
+      pronouns = splitData[2]
+    }
     return {
       avatarURL: splitData[0],
       username: splitData[1],
       accountId: accountId,
+      pronouns: pronouns,
       id: id,
     }
   }
@@ -50,9 +56,13 @@ async function listFronts(accountId: Snowflake): Promise<string[] | null> {
 }
 
 async function addFront(front: FrontType): Promise<void> {
+  let pronouns = front.pronouns
+  if (!pronouns) {
+    pronouns = ""
+  }
   await DATA_KV.put(
     `front${separatorCharacter}${front.accountId}${separatorCharacter}${front.id}`,
-    `${front.avatarURL}${separatorCharacter}${front.username}`,
+    `${front.avatarURL}${separatorCharacter}${front.username}${separatorCharacter}${pronouns}`,
   )
 }
 

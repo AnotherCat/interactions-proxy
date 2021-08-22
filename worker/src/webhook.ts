@@ -32,6 +32,7 @@ export async function sendProxyMessage(
   channel: Snowflake,
   user: APIUser,
   proxyId: string,
+  pronouns: string | null,
   event: FetchEvent,
   guild: Snowflake,
 ): Promise<void> {
@@ -52,6 +53,7 @@ export async function sendProxyMessage(
       user,
       messageData!,
       proxyId,
+      pronouns,
       guild,
     ),
   )
@@ -65,6 +67,7 @@ async function createLogs(
   user: APIUser,
   messageData: RESTPostAPIWebhookWithTokenWaitResult,
   proxyId: string,
+  pronouns: string | null,
   guild: Snowflake,
 ) {
   const logMessage = await sendLogMessage(
@@ -86,6 +89,7 @@ async function createLogs(
     logMessage.channel_id,
     proxyId,
     username,
+    pronouns
   )
   if (!a.ok) {
     await executeWebhook(

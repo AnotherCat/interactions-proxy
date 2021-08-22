@@ -9,6 +9,7 @@ interface storedMessageData {
   log_channel_id: Snowflake
   proxy_id: string
   proxy_name: string
+  proxy_pronouns: string | null
 }
 
 async function createMessageInDatabase(
@@ -20,6 +21,7 @@ async function createMessageInDatabase(
   logChannelId: Snowflake,
   proxyId: string,
   proxyName: string,
+  proxyPronouns: string | null
 ): Promise<Response> {
   return await fetch(`${databaseURL}/messages`, {
     body: JSON.stringify({
@@ -31,6 +33,7 @@ async function createMessageInDatabase(
       log_message_id: logMessageId,
       proxy_id: proxyId,
       proxy_name: proxyName,
+      proxy_pronouns: proxyPronouns
     }),
     method: 'POST',
     headers: {
@@ -46,7 +49,7 @@ async function getMessageFromDatabase(
 ): Promise<storedMessageData | null> {
   const resp = await fetch(
     `${databaseURL}/messages?message_id=eq.${messageId}&channel_id=eq.${channelId}` +
-      '&select=*,message_id::text,channel_id::text,account_id::text,guild_id::text,log_channel_id::text,log_message_id::text,proxy_id,proxy_name',
+      '&select=*,message_id::text,channel_id::text,account_id::text,guild_id::text,log_channel_id::text,log_message_id::text,proxy_id,proxy_name,proxy_pronouns',
     {
       method: 'GET',
       headers: {

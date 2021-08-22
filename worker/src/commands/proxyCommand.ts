@@ -46,6 +46,7 @@ export async function handleProxyCommand(
     interaction.channel_id,
     user,
     frontId,
+    frontData.pronouns,
     event,
     interaction.guild_id,
   )

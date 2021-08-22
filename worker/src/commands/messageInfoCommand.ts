@@ -124,6 +124,10 @@ async function handleGetMessageInfoCommand(
       text: 'Account not found',
     }
   }
+  let pronounMessage = ""
+  if (messageData.proxy_pronouns) {
+    pronounMessage = `\n\**Pronouns:** ${messageData.proxy_pronouns}`
+  }
   const embed: APIEmbed = {
     title: 'Message Information',
     description:
@@ -136,6 +140,7 @@ async function handleGetMessageInfoCommand(
         messageData.message_id,
       )})**` +
       `\n**Click to open profile:** <discord://-/users/${messageData.account_id}>` +
+      pronounMessage +
       `\n**Content:** ${message.content}`,
     author: author,
     footer: footer,
