@@ -99,7 +99,7 @@ async function handleGetMessageInfoCommand(
   const account = await getUser(messageData.account_id)
   const proxyData = await getFront(
     messageData.account_id,
-    messageData.account_id,
+    messageData.proxy_id,
   )
   let author: APIEmbedAuthor
   if (proxyData) {
