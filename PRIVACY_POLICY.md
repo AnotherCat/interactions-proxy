@@ -25,8 +25,11 @@ Webhooks:
 Messages:
 
 - Message Ids
+- Log Message Ids
+- Channel Ids
 - User Ids
 - Front Identifiers
+- Front Usernames
 
 ### Data automatically collected
 
@@ -66,4 +69,4 @@ If you would like us to remove your data please reach out to us and ask.
 
 ## Changes to the policy
 
-Note: This Privacy Policy was last updated on the 17/08/2021. The privacy policy can be updated at anytime without any notice, however we will make an effort to inform you about the change.
+Note: This Privacy Policy was last updated on the 22/08/2021. The privacy policy can be updated at anytime without any notice, however we will make an effort to inform you about the change.
