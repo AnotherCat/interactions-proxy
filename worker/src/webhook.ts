@@ -80,7 +80,7 @@ async function createLogs(
     proxyId,
     guild,
   )
-  const a = await createMessageInDatabase(
+  await createMessageInDatabase(
     messageData.id,
     messageData.channel_id,
     user.id,
@@ -91,12 +91,6 @@ async function createLogs(
     username,
     pronouns
   )
-  if (!a.ok) {
-    await executeWebhook(
-      { content: `${a.status}\n${await a.text()}` },
-      await getWebhook(channel),
-    )
-  }
 }
 
 async function sendLogMessage(
