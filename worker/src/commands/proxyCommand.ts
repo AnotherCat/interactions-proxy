@@ -39,6 +39,7 @@ export async function handleProxyCommand(
       `The front \`${frontId}\`could not be found in the database!`,
     )
   }
+
   await sendProxyMessage(
     message,
     frontData.avatarURL,

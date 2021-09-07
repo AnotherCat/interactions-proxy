@@ -96,11 +96,10 @@ async function handleGetMessageInfoCommand(
       messageData.log_message_id,
     )})** | `
   }
+
   const account = await getUser(messageData.account_id)
-  const proxyData = await getFront(
-    messageData.account_id,
-    messageData.proxy_id,
-  )
+
+  const proxyData = await getFront(messageData.account_id, messageData.proxy_id)
   let author: APIEmbedAuthor
   if (proxyData) {
     author = {
@@ -124,7 +123,7 @@ async function handleGetMessageInfoCommand(
       text: 'Account not found',
     }
   }
-  let pronounMessage = ""
+  let pronounMessage = ''
   if (messageData.proxy_pronouns) {
     pronounMessage = `\n\**Pronouns:** ${messageData.proxy_pronouns}`
   }

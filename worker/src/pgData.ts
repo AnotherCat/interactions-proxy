@@ -21,7 +21,7 @@ async function createMessageInDatabase(
   logChannelId: Snowflake,
   proxyId: string,
   proxyName: string,
-  proxyPronouns: string | null
+  proxyPronouns: string | null,
 ): Promise<Response> {
   return await fetch(`${databaseURL}/messages`, {
     body: JSON.stringify({
@@ -33,7 +33,7 @@ async function createMessageInDatabase(
       log_message_id: logMessageId,
       proxy_id: proxyId,
       proxy_name: proxyName,
-      proxy_pronouns: proxyPronouns
+      proxy_pronouns: proxyPronouns,
     }),
     method: 'POST',
     headers: {

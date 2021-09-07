@@ -38,7 +38,6 @@ async function makeAPIRequest(
   }
 }
 
-
 async function getUser(accountId: Snowflake): Promise<APIUser | null> {
   if (await DATA_KV.get(`notfound:user:${accountId}`)) {
     return null
