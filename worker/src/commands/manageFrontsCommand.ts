@@ -223,12 +223,12 @@ async function handleGetCommand(
   }
   const user = (interaction.user || interaction.member?.user)!
   const existingFronts = await getFront(user.id, options[0].value)
-  
+
   let message = ''
   if (existingFronts === null) {
     message = `The front with the id \`${options[0].value}\` hasn't been created yet!`
   } else {
-    let pronounMessage = ""
+    let pronounMessage = ''
     if (existingFronts.pronouns) {
       pronounMessage = `\n\Pronouns: \`${existingFronts.pronouns}\``
     }
