@@ -4,25 +4,51 @@ import {
   APIUser,
   Snowflake,
   RESTPostAPICurrentUserCreateDMChannelResult,
+  APIChannel,
 } from 'discord-api-types'
 import { InternalRequestError } from './errors'
+import { version } from './version'
+
+const BASE_URL = 'https://discord.com/api/v9'
+const REPO_URL = 'https://github.com/AnotherCat/interactions-proxy'
+
+async function makeAPIRequest(
+  url: string,
+  { data, method }: { data?: Record<string, any>; method?: string } = {},
+): Promise<Response> {
+  if (!method) method = 'GET'
+  const headers = {
+    Authorization: `Bot ${botToken}`,
+    'User-Agent': `DiscordBot (${REPO_URL}, ${version})`,
+  }
+  if (data) {
+    return fetch(`${BASE_URL}${url}`, {
+      headers: {
+        'Content-Type': `application/json`,
+        ...headers,
+      },
+      body: JSON.stringify(data),
+      method,
+    })
+  } else {
+    return fetch(`${BASE_URL}${url}`, {
+      headers: headers,
+      method,
+    })
+  }
+}
+
 
 async function getUser(accountId: Snowflake): Promise<APIUser | null> {
   if (await DATA_KV.get(`notfound:user:${accountId}`)) {
     return null
   }
-  const data = await fetch(`https://discord.com/api/v9/users/${accountId}`, {
-    headers: {
-      Authorization: `Bot ${botToken}`,
-    },
-  })
+  const data = await makeAPIRequest(`/users/${accountId}`)
   if (data.ok) {
     let user
     try {
       user = (await data.json()) as APIUser
     } catch (error) {
-      console.error(error.message)
-      console.error(typeof error)
       return null
     }
     return user
@@ -41,34 +67,23 @@ async function sendDMMessage(
   content: string | null,
   embed: APIEmbed | null,
 ): Promise<APIMessage | null> {
-  const data = await fetch(`https://discord.com/api/v9/users/@me/channels`, {
-    headers: {
-      Authorization: `Bot ${botToken}`,
-      'Content-Type': `application/json`,
-    },
+  const data = await makeAPIRequest(`/users/@me/channels`, {
     method: 'POST',
-    body: JSON.stringify({
+    data: {
       recipient_id: accountId,
-    }),
+    },
   })
   if (!data.ok) {
     throw new InternalRequestError(await data.text(), data)
   }
   const channel: RESTPostAPICurrentUserCreateDMChannelResult = await data.json()
-  const messageData = await fetch(
-    `https://discord.com/api/v9/channels/${channel.id}/messages`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bot ${botToken}`,
-        'Content-Type': `application/json`,
-      },
-      body: JSON.stringify({
-        content: content,
-        embed: embed,
-      }),
+  const messageData = await makeAPIRequest(`/channels/${channel.id}/messages`, {
+    method: 'POST',
+    data: {
+      content: content,
+      embed: embed,
     },
-  )
+  })
   if (!messageData.ok) {
     if (messageData.status === 403) {
       return null
@@ -84,12 +99,9 @@ async function getMessage(
   channelId: Snowflake,
   messageId: Snowflake,
 ): Promise<APIMessage> {
-  const url = `https://discord.com/api/v9/channels/${channelId}/messages/${messageId}`
-  const resp = await fetch(url, {
+  const url = `/channels/${channelId}/messages/${messageId}`
+  const resp = await makeAPIRequest(url, {
     method: 'GET',
-    headers: {
-      Authorization: `Bot ${botToken}`,
-    },
   })
   if (!resp.ok) {
     throw new InternalRequestError(await resp.text(), resp)
@@ -97,4 +109,14 @@ async function getMessage(
   return (await resp.json()) as APIMessage
 }
 
-export { getUser, sendDMMessage, getMessage }
+async function getChannel(channelId: Snowflake): Promise<APIChannel> {
+  const url = `/channels/${channelId}`
+  const resp = await makeAPIRequest(url, {
+    method: 'GET',
+  })
+  if (!resp.ok) {
+    throw new InternalRequestError(await resp.text(), resp)
+  }
+  return (await resp.json()) as APIChannel
+}
+export { getUser, sendDMMessage, getMessage, getChannel, makeAPIRequest }

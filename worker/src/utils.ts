@@ -4,6 +4,7 @@ import {
   APIInteraction,
   RESTPatchAPIInteractionOriginalResponseJSONBody,
 } from 'discord-api-types/v9'
+import { makeAPIRequest } from './discordAPI'
 import {
   InternalRequestError,
   MissingPermissions,
@@ -33,12 +34,25 @@ async function executeDeferredInteractionHandleErrors(
     data = await f
   } catch (error) {
     if (error instanceof MissingPermissions || error instanceof ReturnedError) {
+      try {
+        await updateInteractionResponse(
+          {
+            content: error.message,
+          },
+          interaction,
+        )
+      } catch (e) {
+        console.error(e)
+      }
+    } else if (error instanceof InternalRequestError) {
       await updateInteractionResponse(
         {
-          content: error.message,
+          content: `An error occurred when making a request. Status: ${error.response.status} Error: ${error.message}. \nPlease report this so it can be fixed`,
         },
         interaction,
       )
+    } else {
+      throw error
     }
     return
   }
@@ -50,14 +64,11 @@ async function updateInteractionResponse(
   body: RESTPatchAPIInteractionOriginalResponseJSONBody,
   interaction: APIInteraction,
 ): Promise<void> {
-  const data = await fetch(
-    `https://discord.com/api/v9/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`,
+  const data = await makeAPIRequest(
+    `/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`,
     {
-      body: JSON.stringify(body),
+      data: body,
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
     },
   )
   if (!data.ok) {
