@@ -6,6 +6,7 @@ import {
   RESTPostAPIChannelWebhookResult,
   RESTPostAPIWebhookWithTokenJSONBody,
   Snowflake,
+  ChannelType,
 } from 'discord-api-types/v9'
 import {
   InternalRequestError,
@@ -20,6 +21,7 @@ import {
   applicationId,
 } from './consts'
 import { createMessageInDatabase } from './pgData'
+import { getChannel, makeAPIRequest } from './discordAPI'
 const missingPermissionsMessage =
   'The bot does not have the right permissions in this channel! Please contact your server administrator for more detail. \nNote: this message is cached for 10 minutes'
 
@@ -36,13 +38,13 @@ export async function sendProxyMessage(
   event: FetchEvent,
   guild: Snowflake,
 ): Promise<void> {
-  const webhookData = await getWebhook(channel)
+  const webhookData = await getChannelWithWebhook(channel)
   const data: RESTPostAPIWebhookWithTokenJSONBody = {
     content: message,
     username: name,
     avatar_url: avatar,
   }
-  const messageData = await retryWebhookOnFail(data, webhookData, channel)
+  const messageData = await retryWebhookOnFail(data, webhookData)
 
   event.waitUntil(
     createLogs(
@@ -80,7 +82,7 @@ async function createLogs(
     proxyId,
     guild,
   )
-  await createMessageInDatabase(
+  const a = await createMessageInDatabase(
     messageData.id,
     messageData.channel_id,
     user.id,
@@ -89,7 +91,7 @@ async function createLogs(
     logMessage.channel_id,
     proxyId,
     username,
-    pronouns
+    pronouns,
   )
 }
 
@@ -127,31 +129,27 @@ async function sendLogMessage(
       username: logUsername,
       avatar_url: logAvatarURL,
     },
-    await getWebhook(logChannelId),
-    logChannelId,
+    await getChannelWithWebhook(logChannelId),
   )
 }
 
 async function retryWebhookOnFail(
   data: RESTPostAPIWebhookWithTokenJSONBody,
-  webhook: WebhookWithToken,
-  channel: Snowflake,
+  channel: Channel,
 ): Promise<RESTPostAPIWebhookWithTokenWaitResult> {
-  const messageData = await executeWebhook(data, webhook).catch(async function (
+  const messageData = await executeWebhook(data, channel).catch(async function (
     error,
   ) {
     if (error instanceof InternalRequestError) {
       if (error.response.status === 404) {
-        webhook = await handleWebhookNotFound(channel)
-        await executeWebhook(data, webhook)
+        channel = await handleWebhookNotFound(channel)
+        await executeWebhook(data, channel)
       } else {
         const textBody = await error.response.text()
         let jsonBody = null
         try {
           jsonBody = JSON.parse(textBody)
-        } catch (error) {
-          
-        }
+        } catch (error) {}
         if (
           error.response.status === 400 &&
           jsonBody !== null &&
@@ -175,9 +173,13 @@ async function retryWebhookOnFail(
 
 async function executeWebhook(
   data: RESTPostAPIWebhookWithTokenJSONBody,
-  webhook: WebhookWithToken,
+  channel: Channel,
 ): Promise<RESTPostAPIWebhookWithTokenWaitResult> {
-  const webhookURL = `https://discord.com/api/webhooks/${webhook.id}/${webhook.token}?wait=true`
+  let threadQueryString = ''
+  if (channel.thread) {
+    threadQueryString = `&thread_id=${channel.thread_id}`
+  }
+  const webhookURL = `https://discord.com/api/webhooks/${channel.webhook_id}/${channel.token}?wait=true${threadQueryString}`
   const resp = await fetch(webhookURL, {
     body: JSON.stringify(data),
     method: 'POST',
@@ -192,26 +194,21 @@ async function executeWebhook(
   return resp.json()
 }
 
-// webhook stored in the format. Key: "webhook${separatorCharacter}channelid" Data: "webhookid${separatorCharacter}webhooktoken"
+// webhook stored in the format. Key: "webhook${separatorCharacter}channelid" Data: JSON ChannelStored
 // missing permissions stored in the format. Key: "invalid${separatorCharacter}webhook${separatorCharacter}channelid" Data: "null", expires in 10mins
 
-interface WebhookWithToken {
-  token: string
-  id: string
-}
-
-async function handleWebhookNotFound(
-  channel: Snowflake,
-): Promise<WebhookWithToken> {
-  await DATA_KV.delete(`webhook${separatorCharacter}${channel}`)
-  return await getWebhook(channel)
+async function handleWebhookNotFound(channel: Channel): Promise<Channel> {
+  const WebhookChannelId = channel.thread ? channel.parent_id : channel.id
+  const channelId = channel.thread ? channel.thread_id : channel.id
+  await DATA_KV.delete(`channel${separatorCharacter}${WebhookChannelId}`)
+  return await getChannelWithWebhook(channelId)
 }
 
 async function checkCachedMissingPermissions(
   channel: Snowflake,
 ): Promise<boolean> {
   const resp = await DATA_KV.get(
-    `invalid${separatorCharacter}webhook${separatorCharacter}${channel}`,
+    `invalid${separatorCharacter}channel${separatorCharacter}${channel}`,
   )
   if (resp === null) {
     return false
@@ -219,27 +216,167 @@ async function checkCachedMissingPermissions(
     return true
   }
 }
+interface WebhookWithToken {
+  token: string
+  id: string
+}
 
-async function getWebhook(channel: Snowflake): Promise<WebhookWithToken> {
-  if (await checkCachedMissingPermissions(channel)) {
-    throw new MissingPermissions(missingPermissionsMessage)
-  }
-  const data = await DATA_KV.get(`webhook:${channel}`)
-  if (data === null) {
-    let getWebhook = await getChannelWebhooks(channel)
-    if (getWebhook === null) {
-      getWebhook = await createChannelWebhook(channel)
+interface StandardChannel {
+  id: Snowflake
+  thread: false
+  token: string
+  webhook_id: Snowflake
+}
+
+interface ThreadChannelStored {
+  thread: true
+  parent_id: Snowflake
+}
+
+interface ThreadChannel {
+  thread: true
+  token: string
+  webhook_id: Snowflake
+  thread_id: Snowflake
+  parent_id: Snowflake
+}
+
+interface StandardChannelWithoutWebhook {
+  thread: false
+}
+
+type ChannelStored = ThreadChannelStored | StandardChannel
+type PartialChannelWithoutWebhook =
+  | StandardChannelWithoutWebhook
+  | ThreadChannelStored
+type Channel = ThreadChannel | StandardChannel
+
+async function getThreadWebhook(
+  parentId: Snowflake,
+  threadId: Snowflake,
+): Promise<Channel> {
+  let parentChannelRawData = await DATA_KV.get(`channel:${parentId}`)
+
+  if (parentChannelRawData) {
+    let parentChannelData
+    try {
+      parentChannelData = JSON.parse(parentChannelRawData) as StandardChannel
+    } catch (e) {
+      throw new Error('Could not parse data from KV!')
+    }
+    return {
+      thread: true,
+      thread_id: threadId,
+      token: parentChannelData.token,
+      webhook_id: parentChannelData.webhook_id,
+      parent_id: parentId,
+    }
+  } else {
+    let getWebhookResp = await getChannelWebhooks(parentId)
+    if (getWebhookResp === null) {
+      getWebhookResp = await createChannelWebhook(parentId)
     }
     await DATA_KV.put(
-      `webhook${separatorCharacter}${channel}`,
-      `${getWebhook.id}${separatorCharacter}${getWebhook.token}`,
+      `channel${separatorCharacter}${parentId}`,
+      JSON.stringify({
+        thread: false,
+        webhook_id: getWebhookResp.id,
+        token: getWebhookResp.token,
+      }),
     )
-    return getWebhook
-  } else {
-    const splitValues = data.split(separatorCharacter)
     return {
-      id: splitValues[0],
-      token: splitValues[1],
+      thread: true,
+      webhook_id: getWebhookResp.id,
+      token: getWebhookResp.token,
+      thread_id: threadId,
+      parent_id: parentId,
+    }
+  }
+}
+
+async function getChannelWithWebhook(channelId: Snowflake): Promise<Channel> {
+  if (await checkCachedMissingPermissions(channelId)) {
+    throw new MissingPermissions(missingPermissionsMessage)
+  }
+  const data = await DATA_KV.get(`channel${separatorCharacter}${channelId}`)
+  if (data) {
+    let channelData: ChannelStored
+    try {
+      channelData = JSON.parse(data) as ChannelStored
+    } catch (e) {
+      throw new Error('Could not parse data from KV!')
+    }
+    if (channelData.thread) {
+      return await getThreadWebhook(channelData.parent_id, channelId)
+    } else {
+      return channelData
+    }
+  } else {
+    let partialChannelData: PartialChannelWithoutWebhook
+    try {
+      const getChannelResp = await getChannel(channelId)
+      if (
+        getChannelResp.type === ChannelType.GuildText ||
+        getChannelResp.type === ChannelType.GuildNews
+      ) {
+        partialChannelData = {
+          thread: false,
+        }
+      } else if (
+        (getChannelResp.type === ChannelType.GuildPrivateThread ||
+          getChannelResp.type === ChannelType.GuildPublicThread ||
+          getChannelResp.type === ChannelType.GuildNewsThread) &&
+        getChannelResp.parent_id
+      ) {
+        partialChannelData = {
+          thread: true,
+          parent_id: getChannelResp.parent_id!,
+        }
+      } else {
+        throw new ReturnedError(
+          'That channel is not a text channel or a thread channel!',
+        )
+      }
+    } catch (error) {
+      if (
+        error instanceof InternalRequestError &&
+        error.response.status == 403
+      ) {
+        await DATA_KV.put(
+          `invalid${separatorCharacter}channel${separatorCharacter}${channelId}`,
+          'null',
+          {
+            expirationTtl: 600,
+          },
+        )
+        throw new MissingPermissions(missingPermissionsMessage)
+      } else throw error
+    }
+    if (partialChannelData.thread) {
+      await DATA_KV.put(
+        `channel${separatorCharacter}${channelId}`,
+        JSON.stringify(partialChannelData),
+      )
+      return await getThreadWebhook(partialChannelData.parent_id, channelId)
+    } else {
+      let getWebhookResp = await getChannelWebhooks(channelId)
+      if (getWebhookResp === null) {
+        getWebhookResp = await createChannelWebhook(channelId)
+      }
+      await DATA_KV.put(
+        `channel${separatorCharacter}${channelId}`,
+        JSON.stringify({
+          thread: false,
+          webhook_id: getWebhookResp.id,
+          token: getWebhookResp.token,
+        }),
+      )
+      return {
+        id: channelId,
+        thread: false,
+        webhook_id: getWebhookResp.id,
+        token: getWebhookResp.token,
+      }
     }
   }
 }
@@ -247,13 +384,10 @@ async function getWebhook(channel: Snowflake): Promise<WebhookWithToken> {
 async function getChannelWebhooks(
   channel: Snowflake,
 ): Promise<WebhookWithToken | null> {
-  const getWebhookResponse = await fetch(
-    `https://discord.com/api/v9/channels/${channel}/webhooks`,
+  const getWebhookResponse = await makeAPIRequest(
+    `/channels/${channel}/webhooks`,
     {
       method: 'GET',
-      headers: {
-        Authorization: `Bot ${botToken}`,
-      },
     },
   )
   if (
@@ -261,9 +395,13 @@ async function getChannelWebhooks(
       'application/json' ||
     getWebhookResponse.status !== 200
   ) {
-    await DATA_KV.put(`invalid:webhook:${channel}`, 'null', {
-      expirationTtl: 600,
-    })
+    await DATA_KV.put(
+      `invalid${separatorCharacter}channel${separatorCharacter}${channel}`,
+      'null',
+      {
+        expirationTtl: 600,
+      },
+    )
     throw new MissingPermissions(missingPermissionsMessage)
   }
   const createWebhookJSONResponse: RESTGetAPIChannelWebhooksResult =
@@ -289,17 +427,13 @@ async function getChannelWebhooks(
 async function createChannelWebhook(
   channel: Snowflake,
 ): Promise<WebhookWithToken> {
-  const createWebhookResponse = await fetch(
-    `https://discord.com/api/v9/channels/${channel}/webhooks`,
+  const createWebhookResponse = await makeAPIRequest(
+    `/channels/${channel}/webhooks`,
     {
       method: 'POST',
-      headers: {
-        Authorization: `Bot ${botToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+      data: {
         name: 'Proxy Webhook',
-      }),
+      },
     },
   )
   const responseBody: RESTPostAPIChannelWebhookResult =
@@ -311,7 +445,7 @@ async function createChannelWebhook(
     responseBody.token == undefined
   ) {
     await DATA_KV.put(
-      `invalid${separatorCharacter}webhook${separatorCharacter}${channel}`,
+      `invalid${separatorCharacter}channel${separatorCharacter}${channel}`,
       'null',
       { expirationTtl: 600 },
     )
