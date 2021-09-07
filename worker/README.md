@@ -13,7 +13,7 @@ Secrets:
 
 - `publicSecurityKey` - Discord interactions public key
 - `botToken` - Discord bot token
-- `databaseURL` - The url of the tunnel that the postgrest docker instance is connected to
+- `databaseURL` - The url of the tunnel that the postgrest docker instance is connected to. Note: This must not contain a trailing slash
 - `databaseAuthToken` - The JWT token with `{"role": "readwrite"}` claims signed with the jwt secret setup in the docker setup.
 
 Setup the kv namespace: `wrangler kv:namespace create "DATA_KV"`
