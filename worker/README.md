@@ -18,7 +18,7 @@ Secrets:
 
 Setup the kv namespace: `wrangler kv:namespace create "DATA_KV"`
 
-Constants (`consts.ts`) need to be set to values you want
+Constants (`consts.ts`) need to be set to values you want, a template is in (`consts.example.ts`)
 
 Register commands in `commands.json` to discord. See discord [docs](https://discord.dev) for this
 

@@ -6,3 +6,4 @@ wrangler.toml
 */cloudflared
 /docker-database/start.sh
 /docker-database/scripts/create-tables.sql
+/worker/src/consts.ts
