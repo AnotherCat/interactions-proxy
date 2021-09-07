@@ -3,6 +3,7 @@ version: "3.8"
 services:
   cloudflared:
     image: cloudflare/cloudflared:2021.8.2
+    restart: always
     environment:
       TUNNEL_URL: http://postgrest:3000
     command: "tunnel run"
@@ -15,6 +16,7 @@ services:
 
   postgrest:
     image: postgrest/postgrest
+    restart: always
     # Expose post 3000 and access postgrest locally by uncommenting 
     # the `ports` directive below
     # ports:
