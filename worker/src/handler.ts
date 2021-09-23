@@ -6,7 +6,6 @@ import {
 } from "discord-api-types/v9"
 import { handleAutocomplete } from "./autoComplete"
 import { handleCommands } from "./commands"
-import { listFronts } from "./fronts"
 import { verify } from "./security"
 
 export async function handleRequest(event: FetchEvent): Promise<Response> {
