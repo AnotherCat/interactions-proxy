@@ -7,12 +7,12 @@ const handleIdentifier = async (
   user: APIUser,
 ): Promise<Record<string, any>> => {
   // Promise<APIInteractionResponse> => { TODO update this when discord-api-types releases
-  const ids = await listFronts(user.id)
-  const mappedIds = ids
-    ? ids.map((id) => {
+  const fronts = await listFronts(user.id)
+  const mappedIds = fronts
+    ? fronts.map((front) => {
         return {
-          name: id,
-          value: id,
+          name: front.id,
+          value: front.id,
         }
       })
     : []

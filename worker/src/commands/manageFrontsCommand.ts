@@ -82,7 +82,7 @@ async function handleListCommand(
   } else {
     message = "Fronts: `"
     for (let index = 0; index < fronts.length; index++) {
-      message = message.concat(`${fronts[index]}\``)
+      message = message.concat(`${fronts[index].id}\``)
       if (index !== fronts.length - 1) {
         message = message.concat(", `")
       }

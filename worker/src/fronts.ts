@@ -32,32 +32,54 @@ async function getFront(
   }
 }
 
-async function listFronts(accountId: Snowflake): Promise<string[] | null> {
-  const { keys } = await DATA_KV.list({
-    prefix: `front${separatorCharacter}${accountId}`,
-  })
-  const processedFronts: string[] = []
-  for (let index = 0; index < keys.length; index++) {
-    const { name } = keys[index]
-    const splitData = name.split(separatorCharacter)
-    processedFronts.push(splitData[2])
+async function listFronts(accountId: Snowflake): Promise<FrontType[]> {
+  const fronts = await DATA_KV.get(`fronts${separatorCharacter}${accountId}`)
+  if (fronts === null) {
+    return []
+  } else {
+    try {
+      return JSON.parse(fronts) as FrontType[]
+    } catch (e) {
+      throw new Error("Could not parse data from KV!")
+    }
   }
-  if (processedFronts.length === 0) {
-    return null
-  }
-  return processedFronts
 }
 
-async function addFront(front: FrontType): Promise<void> {
+async function addFront(
+  front: FrontType,
+  existingFronts?: FrontType[],
+): Promise<void> {
+  console.log(JSON.stringify(front))
+  if (!existingFronts) existingFronts = await listFronts(front.accountId)
+  let allFronts = existingFronts.filter((existingFront) => {
+    console.log(existingFront.id !== front.id)
+    console.log(JSON.stringify(existingFront))
+  })
+  allFronts = allFronts.concat([front])
+
   await DATA_KV.put(
     `front${separatorCharacter}${front.accountId}${separatorCharacter}${front.id}`,
     JSON.stringify(front),
   )
+  await DATA_KV.put(
+    `fronts${separatorCharacter}${front.accountId}`,
+    JSON.stringify(allFronts),
+  )
 }
 
-async function removeFront(accountId: Snowflake, id: string): Promise<void> {
+async function removeFront(
+  accountId: Snowflake,
+  id: string,
+  existingFronts?: FrontType[],
+): Promise<void> {
+  if (!existingFronts) existingFronts = await listFronts(accountId)
+  const allFronts = existingFronts.filter((front) => front.id !== id)
   await DATA_KV.delete(
     `front${separatorCharacter}${accountId}${separatorCharacter}${id}`,
+  )
+  await DATA_KV.put(
+    `fronts${separatorCharacter}${accountId}`,
+    JSON.stringify(allFronts),
   )
 }
 
