@@ -44,8 +44,7 @@
           {
             "type": 3,
             "name": "avatar-url",
-            "description": "A url to the image that'll be displayed as the avatar of this front",
-            "required": true
+            "description": "A url to the image that'll be displayed as the avatar of this front"
           },
           {
             "type": 3,

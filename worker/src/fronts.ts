@@ -54,6 +54,7 @@ async function addFront(
   let allFronts = existingFronts.filter((existingFront) => {
     console.log(existingFront.id !== front.id)
     console.log(JSON.stringify(existingFront))
+    existingFront.id !== front.id
   })
   allFronts = allFronts.concat([front])
 
@@ -83,4 +84,4 @@ async function removeFront(
   )
 }
 
-export { listFronts, getFront, removeFront, addFront }
+export { listFronts, getFront, removeFront, addFront, FrontType }

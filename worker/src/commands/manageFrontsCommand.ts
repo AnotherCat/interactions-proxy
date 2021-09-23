@@ -7,7 +7,13 @@ import {
   MessageFlags,
 } from "discord-api-types/v9"
 import { InvalidRequest, ReturnedError } from "../errors"
-import { addFront, getFront, listFronts, removeFront } from "../fronts"
+import {
+  addFront,
+  FrontType,
+  getFront,
+  listFronts,
+  removeFront,
+} from "../fronts"
 import { DATA_SEPARATOR_CODE } from "../consts"
 
 const separatorCharacter = String.fromCharCode(DATA_SEPARATOR_CODE)
@@ -105,12 +111,20 @@ async function handleRegisterCommand(
   if (
     options.length === 0 ||
     options[0].type != ApplicationCommandOptionType.String || // identifer
-    options[1].type != ApplicationCommandOptionType.String || // username
-    options[2].type != ApplicationCommandOptionType.String // avatar-url
+    options[1].type != ApplicationCommandOptionType.String // username
   ) {
     throw new InvalidRequest(
       'Incorrect options on "manage-fronts register" command',
     )
+  }
+  let avatarURL = null
+  if (options[2]) {
+    if (options[2].type != ApplicationCommandOptionType.String) {
+      throw new InvalidRequest(
+        'Incorrect options on "manage-fronts register" command',
+      )
+    }
+    avatarURL = options[2].value
   }
   let pronouns = null
   if (options[3]) {
@@ -126,11 +140,16 @@ async function handleRegisterCommand(
       )
     }
   }
+
   const user = (interaction.user || interaction.member?.user)!
-  const existingFronts = await getFront(user.id, options[0].value)
+  const existingFront = await getFront(user.id, options[0].value)
   const frontData = {
     username: options[1].value,
-    avatarURL: options[2].value,
+    avatarURL: avatarURL
+      ? avatarURL
+      : `https://cdn.discordapp.com/embed/avatars/${
+          parseInt(user.discriminator) % 5
+        }.png`,
     pronouns: pronouns,
     id: options[0].value,
     accountId: user.id,
@@ -172,13 +191,22 @@ async function handleRegisterCommand(
     }
   }
 
-  if (existingFronts != null) {
+  if (existingFront != null) {
     if (
-      existingFronts.avatarURL === frontData.avatarURL &&
-      existingFronts.username === frontData.username &&
-      existingFronts.pronouns === frontData.pronouns &&
-      existingFronts.accountId === frontData.accountId &&
-      existingFronts.id === frontData.id
+      !avatarURL &&
+      existingFront.avatarURL.startsWith(
+        "https://cdn.discordapp.com/embed/avatars/",
+      )
+    ) {
+      // This is so that it doesn't appear that the front changes if the user's discriminator changes
+      existingFront.avatarURL = frontData.avatarURL
+    }
+    if (
+      existingFront.avatarURL === frontData.avatarURL &&
+      existingFront.username === frontData.username &&
+      existingFront.pronouns === frontData.pronouns &&
+      existingFront.accountId === frontData.accountId &&
+      existingFront.id === frontData.id
     ) {
       return {
         type: InteractionResponseType.ChannelMessageWithSource,
