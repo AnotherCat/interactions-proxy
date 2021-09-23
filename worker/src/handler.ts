@@ -19,7 +19,7 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
     return new Response("invalid request", { status: 401 })
   }
   const interaction = (await request.json()) as APIInteraction
-  console.log(JSON.stringify(interaction))
+
   /*
   return new Response(
     JSON.stringify({ type: InteractionResponseType.ChannelMessageWithSource, data: {content: JSON.stringify(interaction)} }),
@@ -53,7 +53,7 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
       )
     case 4:
       const resp = await handleAutocomplete(interaction)
-      console.log(resp)
+
       return new Response(JSON.stringify(resp), {
         headers: { "Content-Type": "application/json" },
       })

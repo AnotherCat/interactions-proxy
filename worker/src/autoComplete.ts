@@ -20,14 +20,6 @@ const handleIdentifier = async (
   const IdsToReturn = mappedIds?.filter(
     (id) => option.value === "" || id.value.startsWith(option.value),
   ) // TODO - fix this once discord-api-types is out
-  console.log(
-    JSON.stringify({
-      type: 8,
-      data: {
-        choices: IdsToReturn,
-      },
-    }),
-  )
   return {
     type: 8,
     data: {
@@ -63,11 +55,11 @@ const handleManageFrontsAutocomplete = async (
       "Invalid subcommand for 'manage-fronts' autocomplete",
     )
   }
-  console.log(JSON.stringify(interaction.data.options[0].options))
+
   const focusedOptions = interaction.data.options[0].options.filter(
     (option: AutocompleteOption) => option.focused,
   )
-  console.log(JSON.stringify(focusedOptions))
+
   if (focusedOptions.length > 1 || focusedOptions.length === 0) {
     throw new InvalidRequest("There must be one focused option!")
   }
@@ -81,11 +73,11 @@ const handleProxyAutocomplete = async (
   interaction: any,
 ): Promise<Record<string, any>> => {
   // Promise<APIInteractionResponse> => { TODO update this when discord-api-types releases
-  console.log(JSON.stringify(interaction.data.options))
+
   const focusedOptions = interaction.data.options.filter(
     (option: AutocompleteOption) => option.focused,
   )
-  console.log(JSON.stringify(focusedOptions))
+
   if (focusedOptions.length > 1 || focusedOptions.length === 0) {
     throw new InvalidRequest("There must be one focused option!")
   }
