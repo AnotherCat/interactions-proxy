@@ -7,13 +7,13 @@ import {
   ApplicationCommandOptionType,
   APIChatInputApplicationCommandInteraction,
   APIMessageApplicationCommandInteraction,
-} from 'discord-api-types/v9'
-import { applicationId, modRoleId } from '../consts'
-import { InternalRequestError, InvalidRequest, ReturnedError } from '../errors'
-import { getFront } from '../fronts'
-import { getMessageFromDatabase } from '../pgData'
-import { getMessage, getUser, sendDMMessage } from '../discordAPI'
-import { makeMessageURL } from '../utils'
+} from "discord-api-types/v9"
+import { applicationId, modRoleId } from "../consts"
+import { InternalRequestError, InvalidRequest, ReturnedError } from "../errors"
+import { getFront } from "../fronts"
+import { getMessageFromDatabase } from "../pgData"
+import { getMessage, getUser, sendDMMessage } from "../discordAPI"
+import { makeMessageURL } from "../utils"
 
 async function handleGetMessageInfoSlashCommand(
   interaction: APIChatInputApplicationCommandInteraction,
@@ -26,7 +26,7 @@ async function handleGetMessageInfoSlashCommand(
     throw new InvalidRequest('Incorrect options on "proxy" command')
   }
   if (interaction.guild_id === undefined) {
-    throw new ReturnedError('This command can only be used in a server!')
+    throw new ReturnedError("This command can only be used in a server!")
   }
   let message: APIMessage
   try {
@@ -40,11 +40,11 @@ async function handleGetMessageInfoSlashCommand(
         case 403:
           return {
             content:
-              'I do not have the required permissions in that channel! Please contact the server administrator',
+              "I do not have the required permissions in that channel! Please contact the server administrator",
           }
         case 404:
           return {
-            content: 'That message could not be found!',
+            content: "That message could not be found!",
           }
         default:
           throw error
@@ -69,12 +69,12 @@ async function handleGetMessageInfoCommand(
   message: APIMessage,
 ): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
   if (!interaction.guild_id) {
-    throw new ReturnedError('This command cannot be used in a dm')
+    throw new ReturnedError("This command cannot be used in a dm")
   }
   const user = (interaction.user || interaction.member?.user)!
   if (message.webhook_id === undefined) {
     return {
-      content: 'This message was not proxyed through this bot!',
+      content: "This message was not proxyed through this bot!",
     }
   }
   const messageData = await getMessageFromDatabase(
@@ -83,10 +83,10 @@ async function handleGetMessageInfoCommand(
   )
   if (!messageData) {
     return {
-      content: 'This message could not be found in the database!',
+      content: "This message could not be found in the database!",
     }
   }
-  let extraMessage = '\n'
+  let extraMessage = "\n"
   if (interaction.member!.roles.includes(modRoleId)) {
     extraMessage = `\n**[Jump to log message](${makeMessageURL(
       messageData.guild_id,
@@ -118,15 +118,15 @@ async function handleGetMessageInfoCommand(
     }
   } else {
     footer = {
-      text: 'Account not found',
+      text: "Account not found",
     }
   }
-  let pronounMessage = ''
+  let pronounMessage = ""
   if (messageData.proxy_pronouns) {
     pronounMessage = `\n\**Pronouns:** ${messageData.proxy_pronouns}`
   }
   const embed: APIEmbed = {
-    title: 'Message Information',
+    title: "Message Information",
     description:
       `**Channel:** <#${messageData.channel_id}>` +
       `\n**Message:** ${messageData.message_id}` +
@@ -147,9 +147,9 @@ async function handleGetMessageInfoCommand(
   let responseMessage: string
   if (!sendDMMessageResult) {
     responseMessage =
-      'Could not send you a dm! Please check your dm privacy settings!'
+      "Could not send you a dm! Please check your dm privacy settings!"
   } else {
-    responseMessage = 'Sent you a dm with the relevant information'
+    responseMessage = "Sent you a dm with the relevant information"
   }
   return {
     content: responseMessage,

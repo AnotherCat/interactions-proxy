@@ -5,10 +5,10 @@ import {
   ApplicationCommandOptionType,
   InteractionResponseType,
   MessageFlags,
-} from 'discord-api-types/v9'
-import { InvalidRequest, ReturnedError } from '../errors'
-import { addFront, getFront, listFronts, removeFront } from '../fronts'
-import { DATA_SEPARATOR_CODE } from '../consts'
+} from "discord-api-types/v9"
+import { InvalidRequest, ReturnedError } from "../errors"
+import { addFront, getFront, listFronts, removeFront } from "../fronts"
+import { DATA_SEPARATOR_CODE } from "../consts"
 
 const separatorCharacter = String.fromCharCode(DATA_SEPARATOR_CODE)
 
@@ -22,16 +22,16 @@ export async function handleManageFrontsCommand(
     throw new InvalidRequest('Incorrect options on "manage-fronts" command')
   }
   switch (interaction.data.options[0].name) {
-    case 'register':
+    case "register":
       return await handleRegisterCommand(interaction)
-    case 'list':
+    case "list":
       return await handleListCommand(interaction)
-    case 'get':
+    case "get":
       return await handleGetCommand(interaction)
-    case 'delete':
+    case "delete":
       return await handleDeleteCommand(interaction)
     default:
-      throw new InvalidRequest('That application command was not found')
+      throw new InvalidRequest("That application command was not found")
   }
 }
 async function handleDeleteCommand(
@@ -50,13 +50,13 @@ async function handleDeleteCommand(
   }
   const frontId = options[0].value
   const front = await getFront(user.id, frontId)
-  let message = ''
+  let message = ""
   if (front === null) {
     message = `The front \`${frontId}\` has not be registered yet!`
   } else {
     await removeFront(user.id, frontId)
     message =
-      'Front successfully removed!' +
+      "Front successfully removed!" +
       "\nHere's the data just in case you need it:" +
       `\nFront ID: \`${front.id}\`` +
       `\nUsername: \`${front.username}\`` +
@@ -76,15 +76,15 @@ async function handleListCommand(
 ): Promise<APIInteractionResponseChannelMessageWithSource> {
   const user = (interaction.user || interaction.member?.user)!
   const fronts = await listFronts(user.id)
-  let message = ''
+  let message = ""
   if (fronts === null) {
-    message = 'There are no fronts registered under this account!'
+    message = "There are no fronts registered under this account!"
   } else {
-    message = 'Fronts: `'
+    message = "Fronts: `"
     for (let index = 0; index < fronts.length; index++) {
       message = message.concat(`${fronts[index]}\``)
       if (index !== fronts.length - 1) {
-        message = message.concat(', `')
+        message = message.concat(", `")
       }
     }
   }
@@ -137,7 +137,7 @@ async function handleRegisterCommand(
   }
   if (frontData.id.length > 15) {
     throw new ReturnedError(
-      'The front identifer must be less than 15 characters',
+      "The front identifer must be less than 15 characters",
     )
   }
   if (frontData.username.length > 32) {
@@ -151,8 +151,8 @@ async function handleRegisterCommand(
     )
   }
   if (
-    !frontData.avatarURL.startsWith('https://') &&
-    !frontData.avatarURL.startsWith('http://')
+    !frontData.avatarURL.startsWith("https://") &&
+    !frontData.avatarURL.startsWith("http://")
   ) {
     throw new ReturnedError(
       "The front's avatar url must start with `http://` or `https://`",
@@ -223,11 +223,11 @@ async function handleGetCommand(
   const user = (interaction.user || interaction.member?.user)!
   const existingFronts = await getFront(user.id, options[0].value)
 
-  let message = ''
+  let message = ""
   if (existingFronts === null) {
     message = `The front with the id \`${options[0].value}\` hasn't been created yet!`
   } else {
-    let pronounMessage = ''
+    let pronounMessage = ""
     if (existingFronts.pronouns) {
       pronounMessage = `\n\Pronouns: \`${existingFronts.pronouns}\``
     }

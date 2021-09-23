@@ -7,16 +7,16 @@ import {
   ApplicationCommandType,
   InteractionResponseType,
   MessageFlags,
-} from 'discord-api-types/v9'
-import { InvalidRequest } from '../errors'
-import { handleProxyCommand } from './proxyCommand'
-import { handleManageFrontsCommand } from './manageFrontsCommand'
+} from "discord-api-types/v9"
+import { InvalidRequest } from "../errors"
+import { handleProxyCommand } from "./proxyCommand"
+import { handleManageFrontsCommand } from "./manageFrontsCommand"
 import {
   handleGetMessageInfoSlashCommand,
   handleGetMessageInfoMessageCommand,
-} from './messageInfoCommand'
+} from "./messageInfoCommand"
 
-import { executeDeferredInteractionHandleErrors } from '../utils'
+import { executeDeferredInteractionHandleErrors } from "../utils"
 export async function handleCommands(
   interaction: APIApplicationCommandInteraction,
   event: FetchEvent,
@@ -27,16 +27,16 @@ export async function handleCommands(
   switch (interaction.data.type) {
     case ApplicationCommandType.ChatInput:
       switch (interaction.data.name) {
-        case 'proxy':
+        case "proxy":
           return await handleProxyCommand(
             interaction as APIChatInputApplicationCommandInteraction,
             event,
           )
-        case 'manage-fronts':
+        case "manage-fronts":
           return await handleManageFrontsCommand(
             interaction as APIChatInputApplicationCommandInteraction,
           )
-        case 'get-message-info':
+        case "get-message-info":
           event.waitUntil(
             executeDeferredInteractionHandleErrors(
               handleGetMessageInfoSlashCommand(
@@ -52,11 +52,11 @@ export async function handleCommands(
             },
           }
         default:
-          throw new InvalidRequest('That application command was not found')
+          throw new InvalidRequest("That application command was not found")
       }
     case ApplicationCommandType.Message:
       switch (interaction.data.name) {
-        case 'Get Message Info':
+        case "Get Message Info":
           event.waitUntil(
             executeDeferredInteractionHandleErrors(
               handleGetMessageInfoMessageCommand(
@@ -72,10 +72,10 @@ export async function handleCommands(
             },
           }
         default:
-          throw new InvalidRequest('That application command was not found')
+          throw new InvalidRequest("That application command was not found")
       }
 
     default:
-      throw new InvalidRequest('That application command type is not handled')
+      throw new InvalidRequest("That application command type is not handled")
   }
 }

@@ -1,5 +1,5 @@
-import { Snowflake } from 'discord-api-types/v9'
-import { InternalRequestError, ReturnedError } from './errors'
+import { Snowflake } from "discord-api-types/v9"
+import { InternalRequestError, ReturnedError } from "./errors"
 interface storedMessageData {
   message_id: Snowflake
   channel_id: Snowflake
@@ -35,10 +35,10 @@ async function createMessageInDatabase(
       proxy_name: proxyName,
       proxy_pronouns: proxyPronouns,
     }),
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${databaseAuthToken}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   })
 }
@@ -49,9 +49,9 @@ async function getMessageFromDatabase(
 ): Promise<storedMessageData | null> {
   const resp = await fetch(
     `${databaseURL}/messages?message_id=eq.${messageId}&channel_id=eq.${channelId}` +
-      '&select=*,message_id::text,channel_id::text,account_id::text,guild_id::text,log_channel_id::text,log_message_id::text,proxy_id,proxy_name,proxy_pronouns',
+      "&select=*,message_id::text,channel_id::text,account_id::text,guild_id::text,log_channel_id::text,log_message_id::text,proxy_id,proxy_name,proxy_pronouns",
     {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${databaseAuthToken}`,
       },
@@ -65,13 +65,13 @@ async function getMessageFromDatabase(
       return data[0]
     } else {
       throw new Error(
-        'There were more than 1 messages with the same channel_id and message_id',
+        "There were more than 1 messages with the same channel_id and message_id",
       )
     }
   } else {
     if (resp.status >= 500 && resp.status <= 600) {
       throw new ReturnedError(
-        'The database service could not be accessed at this time. Please contact the developer',
+        "The database service could not be accessed at this time. Please contact the developer",
       )
     }
     const errorData = data as any

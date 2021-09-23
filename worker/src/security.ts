@@ -1,5 +1,5 @@
 // adapted from https://gist.github.com/devsnek/77275f6e3f810a9545440931ed314dc1
-'use strict'
+"use strict"
 
 function hex2bin(hex: string) {
   const buf = new Uint8Array(Math.ceil(hex.length / 2))
@@ -10,29 +10,29 @@ function hex2bin(hex: string) {
 }
 
 const PUBLIC_KEY = crypto.subtle.importKey(
-  'raw',
+  "raw",
   hex2bin(publicSecurityKey),
   {
-    name: 'NODE-ED25519',
-    namedCurve: 'NODE-ED25519',
+    name: "NODE-ED25519",
+    namedCurve: "NODE-ED25519",
   },
   true,
-  ['verify'],
+  ["verify"],
 )
 
 const encoder = new TextEncoder()
 
 export async function verify(request: Request): Promise<boolean> {
-  const raw_signature = request.headers.get('X-Signature-Ed25519')
+  const raw_signature = request.headers.get("X-Signature-Ed25519")
   if (raw_signature === null) {
     return false
   }
   const signature = hex2bin(raw_signature)
-  const timestamp = request.headers.get('X-Signature-Timestamp')
+  const timestamp = request.headers.get("X-Signature-Timestamp")
   const unknown = await request.clone().text()
 
   return await crypto.subtle.verify(
-    'NODE-ED25519',
+    "NODE-ED25519",
     await PUBLIC_KEY,
     signature,
     encoder.encode(timestamp + unknown),

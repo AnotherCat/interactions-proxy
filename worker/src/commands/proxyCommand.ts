@@ -4,10 +4,10 @@ import {
   ApplicationCommandOptionType,
   InteractionResponseType,
   MessageFlags,
-} from 'discord-api-types/v9'
-import { InvalidRequest, ReturnedError } from '../errors'
-import { getFront } from '../fronts'
-import { sendProxyMessage } from '../webhook'
+} from "discord-api-types/v9"
+import { InvalidRequest, ReturnedError } from "../errors"
+import { getFront } from "../fronts"
+import { sendProxyMessage } from "../webhook"
 export async function handleProxyCommand(
   interaction: APIChatInputApplicationCommandInteraction,
   event: FetchEvent,
@@ -21,7 +21,7 @@ export async function handleProxyCommand(
     throw new InvalidRequest('Incorrect options on "proxy" command')
   }
   if (interaction.guild_id === undefined) {
-    throw new ReturnedError('This command can only be used in a server!')
+    throw new ReturnedError("This command can only be used in a server!")
   }
   const frontId = interaction.data.options[1].value
   const message = interaction.data.options[0].value

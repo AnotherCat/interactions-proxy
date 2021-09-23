@@ -5,26 +5,26 @@ import {
   Snowflake,
   RESTPostAPICurrentUserCreateDMChannelResult,
   APIChannel,
-} from 'discord-api-types'
-import { InternalRequestError } from './errors'
-import { version } from './version'
+} from "discord-api-types"
+import { InternalRequestError } from "./errors"
+import { version } from "./version"
 
-const BASE_URL = 'https://discord.com/api/v9'
-const REPO_URL = 'https://github.com/AnotherCat/interactions-proxy'
+const BASE_URL = "https://discord.com/api/v9"
+const REPO_URL = "https://github.com/AnotherCat/interactions-proxy"
 
 async function makeAPIRequest(
   url: string,
   { data, method }: { data?: Record<string, any>; method?: string } = {},
 ): Promise<Response> {
-  if (!method) method = 'GET'
+  if (!method) method = "GET"
   const headers = {
     Authorization: `Bot ${botToken}`,
-    'User-Agent': `DiscordBot (${REPO_URL}, ${version})`,
+    "User-Agent": `DiscordBot (${REPO_URL}, ${version})`,
   }
   if (data) {
     return fetch(`${BASE_URL}${url}`, {
       headers: {
-        'Content-Type': `application/json`,
+        "Content-Type": `application/json`,
         ...headers,
       },
       body: JSON.stringify(data),
@@ -52,7 +52,7 @@ async function getUser(accountId: Snowflake): Promise<APIUser | null> {
     }
     return user
   } else if (data.status === 404) {
-    await DATA_KV.put(`notfound:user:${accountId}`, 'null', {
+    await DATA_KV.put(`notfound:user:${accountId}`, "null", {
       expirationTtl: 86400,
     })
     return null
@@ -67,7 +67,7 @@ async function sendDMMessage(
   embed: APIEmbed | null,
 ): Promise<APIMessage | null> {
   const data = await makeAPIRequest(`/users/@me/channels`, {
-    method: 'POST',
+    method: "POST",
     data: {
       recipient_id: accountId,
     },
@@ -77,7 +77,7 @@ async function sendDMMessage(
   }
   const channel: RESTPostAPICurrentUserCreateDMChannelResult = await data.json()
   const messageData = await makeAPIRequest(`/channels/${channel.id}/messages`, {
-    method: 'POST',
+    method: "POST",
     data: {
       content: content,
       embed: embed,
@@ -100,7 +100,7 @@ async function getMessage(
 ): Promise<APIMessage> {
   const url = `/channels/${channelId}/messages/${messageId}`
   const resp = await makeAPIRequest(url, {
-    method: 'GET',
+    method: "GET",
   })
   if (!resp.ok) {
     throw new InternalRequestError(await resp.text(), resp)
@@ -111,7 +111,7 @@ async function getMessage(
 async function getChannel(channelId: Snowflake): Promise<APIChannel> {
   const url = `/channels/${channelId}`
   const resp = await makeAPIRequest(url, {
-    method: 'GET',
+    method: "GET",
   })
   if (!resp.ok) {
     throw new InternalRequestError(await resp.text(), resp)

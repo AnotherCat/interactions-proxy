@@ -1,13 +1,13 @@
-import { handleRequest } from './handler'
+import { handleRequest } from "./handler"
 import {
   InternalRequestError,
   InvalidRequest,
   MissingPermissions,
   ReturnedError,
-} from './errors'
-import { MessageFlags } from 'discord-api-types/v9'
+} from "./errors"
+import { MessageFlags } from "discord-api-types/v9"
 
-addEventListener('fetch', (event) => {
+addEventListener("fetch", (event) => {
   event.respondWith(
     handleRequest(event).catch(function (error) {
       if (error instanceof InvalidRequest) {
@@ -37,7 +37,7 @@ addEventListener('fetch', (event) => {
           }),
           {
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
           },
         )

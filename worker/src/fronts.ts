@@ -1,5 +1,5 @@
-import { Snowflake } from 'discord-api-types/v9'
-import { DATA_SEPARATOR_CODE } from './consts'
+import { Snowflake } from "discord-api-types/v9"
+import { DATA_SEPARATOR_CODE } from "./consts"
 
 interface FrontType {
   avatarURL: string
@@ -27,7 +27,7 @@ async function getFront(
     try {
       return JSON.parse(data) as FrontType
     } catch (e) {
-      throw new Error('Could not parse data from KV!')
+      throw new Error("Could not parse data from KV!")
     }
   }
 }

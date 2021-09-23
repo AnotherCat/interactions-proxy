@@ -1,6 +1,6 @@
-import { APIUser, ApplicationCommandOptionType } from 'discord-api-types'
-import { InvalidRequest } from './errors'
-import { listFronts } from './fronts'
+import { APIUser, ApplicationCommandOptionType } from "discord-api-types"
+import { InvalidRequest } from "./errors"
+import { listFronts } from "./fronts"
 
 const handleIdentifier = async (
   option: AutocompleteOption,
@@ -18,7 +18,7 @@ const handleIdentifier = async (
     : null
 
   const IdsToReturn = mappedIds?.filter(
-    (id) => option.value === '' || id.value.startsWith(option.value),
+    (id) => option.value === "" || id.value.startsWith(option.value),
   ) // TODO - fix this once discord-api-types is out
   console.log(
     JSON.stringify({
@@ -56,8 +56,8 @@ const handleManageFrontsAutocomplete = async (
     )
   }
   if (
-    interaction.data.options[0].name !== 'get' &&
-    interaction.data.options[0].name !== 'delete'
+    interaction.data.options[0].name !== "get" &&
+    interaction.data.options[0].name !== "delete"
   ) {
     throw new InvalidRequest(
       "Invalid subcommand for 'manage-fronts' autocomplete",
@@ -69,7 +69,7 @@ const handleManageFrontsAutocomplete = async (
   )
   console.log(JSON.stringify(focusedOptions))
   if (focusedOptions.length > 1 || focusedOptions.length === 0) {
-    throw new InvalidRequest('There must be one focused option!')
+    throw new InvalidRequest("There must be one focused option!")
   }
   return await handleIdentifier(
     focusedOptions[0] as AutocompleteOption,
@@ -87,7 +87,7 @@ const handleProxyAutocomplete = async (
   )
   console.log(JSON.stringify(focusedOptions))
   if (focusedOptions.length > 1 || focusedOptions.length === 0) {
-    throw new InvalidRequest('There must be one focused option!')
+    throw new InvalidRequest("There must be one focused option!")
   }
   return await handleIdentifier(
     focusedOptions[0] as AutocompleteOption,
@@ -100,12 +100,12 @@ const handleAutocomplete = async (
 ): Promise<Record<string, any>> => {
   // Promise<APIInteractionResponse> => { TODO update this when discord-api-types releases
   switch (interaction.data.name) {
-    case 'manage-fronts':
+    case "manage-fronts":
       return handleManageFrontsAutocomplete(interaction)
-    case 'proxy':
+    case "proxy":
       return handleProxyAutocomplete(interaction)
     default:
-      throw new InvalidRequest('That application command was not found')
+      throw new InvalidRequest("That application command was not found")
   }
 }
 

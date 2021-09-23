@@ -3,17 +3,17 @@ import {
   APIInteractionResponse,
   APIInteraction,
   RESTPatchAPIInteractionOriginalResponseJSONBody,
-} from 'discord-api-types/v9'
-import { makeAPIRequest } from './discordAPI'
+} from "discord-api-types/v9"
+import { makeAPIRequest } from "./discordAPI"
 import {
   InternalRequestError,
   MissingPermissions,
   ReturnedError,
-} from './errors'
+} from "./errors"
 
 function makeJSONResponse(body: APIInteractionResponse): Response {
   return new Response(JSON.stringify(body), {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
   })
 }
 
@@ -68,7 +68,7 @@ async function updateInteractionResponse(
     `/webhooks/${interaction.application_id}/${interaction.token}/messages/@original`,
     {
       data: body,
-      method: 'PATCH',
+      method: "PATCH",
     },
   )
   if (!data.ok) {
