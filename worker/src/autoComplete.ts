@@ -15,7 +15,7 @@ const handleIdentifier = async (
           value: id,
         }
       })
-    : null
+    : []
 
   const IdsToReturn = mappedIds?.filter(
     (id) => option.value === "" || id.value.startsWith(option.value),
