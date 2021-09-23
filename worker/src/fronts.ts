@@ -51,11 +51,9 @@ async function addFront(
 ): Promise<void> {
   console.log(JSON.stringify(front))
   if (!existingFronts) existingFronts = await listFronts(front.accountId)
-  let allFronts = existingFronts.filter((existingFront) => {
-    console.log(existingFront.id !== front.id)
-    console.log(JSON.stringify(existingFront))
-    existingFront.id !== front.id
-  })
+  let allFronts = existingFronts.filter(
+    (existingFront) => existingFront.id !== front.id,
+  )
   allFronts = allFronts.concat([front])
 
   await DATA_KV.put(
