@@ -11,8 +11,8 @@ const handleIdentifier = async (
   const mappedIds = fronts
     ? fronts.map((front) => {
         return {
-          name: front.id,
-          value: front.id,
+          name: front,
+          value: front,
         }
       })
     : []

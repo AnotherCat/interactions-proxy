@@ -32,13 +32,13 @@ async function getFront(
   }
 }
 
-async function listFronts(accountId: Snowflake): Promise<FrontType[]> {
+async function listFronts(accountId: Snowflake): Promise<string[]> {
   const fronts = await DATA_KV.get(`fronts${separatorCharacter}${accountId}`)
   if (fronts === null) {
     return []
   } else {
     try {
-      return JSON.parse(fronts) as FrontType[]
+      return JSON.parse(fronts) as string[]
     } catch (e) {
       throw new Error("Could not parse data from KV!")
     }
@@ -47,14 +47,14 @@ async function listFronts(accountId: Snowflake): Promise<FrontType[]> {
 
 async function addFront(
   front: FrontType,
-  existingFronts?: FrontType[],
+  existingFronts?: string[],
 ): Promise<void> {
   console.log(JSON.stringify(front))
   if (!existingFronts) existingFronts = await listFronts(front.accountId)
   let allFronts = existingFronts.filter(
-    (existingFront) => existingFront.id !== front.id,
+    (existingFront) => existingFront !== front.id,
   )
-  allFronts = allFronts.concat([front])
+  allFronts = allFronts.concat([front.id])
 
   await DATA_KV.put(
     `front${separatorCharacter}${front.accountId}${separatorCharacter}${front.id}`,
@@ -69,10 +69,12 @@ async function addFront(
 async function removeFront(
   accountId: Snowflake,
   id: string,
-  existingFronts?: FrontType[],
+  existingFronts?: string[],
 ): Promise<void> {
   if (!existingFronts) existingFronts = await listFronts(accountId)
-  const allFronts = existingFronts.filter((front) => front.id !== id)
+  const allFronts = existingFronts.filter(
+    (existingFront) => existingFront !== id,
+  )
   await DATA_KV.delete(
     `front${separatorCharacter}${accountId}${separatorCharacter}${id}`,
   )
