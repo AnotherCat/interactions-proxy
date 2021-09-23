@@ -4,7 +4,7 @@
   "description": "Cloudflare worker TypeScript template",
   "main": "dist/worker.js",
   "scripts": {
-    "prebuild": "node -p \"'// This value is updated every build by a script\\nexport const version = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "prebuild": "node -p \"'// This value is updated every build by a script\\nexport const version = ' + JSON.stringify(require('./package.json').version)\" > src/version.ts",
     "build": "webpack",
     "format": "prettier --write  '*.{json,js}' 'src/**/*.{js,ts}' 'test/**/*.{js,ts}'",
     "lint": "eslint --max-warnings=0 src && prettier --check '*.{json,js}' 'src/**/*.{js,ts}' 'test/**/*.{js,ts}'",
