@@ -5,11 +5,9 @@ import {
   RESTPatchAPIInteractionOriginalResponseJSONBody,
   APIMessage,
   ApplicationCommandOptionType,
-} from 'discord-api-types/v9'
-import {
   APIChatInputApplicationCommandInteraction,
   APIMessageApplicationCommandInteraction,
-} from '../api-types-for-the-timebeing'
+} from 'discord-api-types/v9'
 import { applicationId, modRoleId } from '../consts'
 import { InternalRequestError, InvalidRequest, ReturnedError } from '../errors'
 import { getFront } from '../fronts'

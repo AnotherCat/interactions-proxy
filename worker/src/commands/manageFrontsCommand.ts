@@ -1,5 +1,5 @@
 import {
-  APIApplicationCommandInteraction,
+  APIChatInputApplicationCommandInteraction,
   APIInteractionResponseChannelMessageWithSource,
   ApplicationCommandInteractionDataOptionSubCommand,
   ApplicationCommandOptionType,
@@ -9,7 +9,6 @@ import {
 import { InvalidRequest, ReturnedError } from '../errors'
 import { addFront, getFront, listFronts, removeFront } from '../fronts'
 import { DATA_SEPARATOR_CODE } from '../consts'
-import { APIChatInputApplicationCommandInteraction } from '../api-types-for-the-timebeing'
 
 const separatorCharacter = String.fromCharCode(DATA_SEPARATOR_CODE)
 

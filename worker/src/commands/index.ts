@@ -1,6 +1,10 @@
 import {
+  APIApplicationCommandInteraction,
+  APIChatInputApplicationCommandInteraction,
   APIInteractionResponseChannelMessageWithSource,
   APIInteractionResponseDeferredChannelMessageWithSource,
+  APIMessageApplicationCommandInteraction,
+  ApplicationCommandType,
   InteractionResponseType,
   MessageFlags,
 } from 'discord-api-types/v9'
@@ -11,12 +15,7 @@ import {
   handleGetMessageInfoSlashCommand,
   handleGetMessageInfoMessageCommand,
 } from './messageInfoCommand'
-import {
-  APIApplicationCommandInteraction,
-  APIChatInputApplicationCommandInteraction,
-  APIMessageApplicationCommandInteraction,
-  ApplicationCommandType,
-} from '../api-types-for-the-timebeing'
+
 import { executeDeferredInteractionHandleErrors } from '../utils'
 export async function handleCommands(
   interaction: APIApplicationCommandInteraction,
@@ -41,7 +40,7 @@ export async function handleCommands(
           event.waitUntil(
             executeDeferredInteractionHandleErrors(
               handleGetMessageInfoSlashCommand(
-                interaction as APIMessageApplicationCommandInteraction,
+                interaction as APIChatInputApplicationCommandInteraction,
               ),
               interaction,
             ),
