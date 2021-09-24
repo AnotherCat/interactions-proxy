@@ -2,12 +2,12 @@
   {
     "type": 1,
     "name": "proxy",
-    "description": "\"AUTOCOMPLETE\" Proxy a message to a specified front",
+    "description": "Proxy a message to a specified front",
     "options": [
       {
         "type": 3,
         "name": "front",
-        "description": "\"AUTOCOMPLETE\" The front to proxy the message to",
+        "description": "The front to proxy the message to",
         "required": true,
         "autocomplete": true
       },
@@ -22,7 +22,7 @@
   {
     "type": 1,
     "name": "manage-fronts",
-    "description": "\"AUTOCOMPLETE\" Commands for managing fronts",
+    "description": "Commands for managing fronts",
     "options": [
       {
         "type": 1,
@@ -56,12 +56,12 @@
       {
         "type": 1,
         "name": "get",
-        "description": "\"AUTOCOMPLETE\" Get a front's info",
+        "description": "Get a front's info",
         "options": [
           {
             "type": 3,
             "name": "identifier",
-            "description": "\"AUTOCOMPLETE\" The identifier for the front",
+            "description": "The identifier for the front",
             "required": true,
             "autocomplete": true
           }
@@ -75,12 +75,12 @@
       {
         "type": 1,
         "name": "delete",
-        "description": "\"AUTOCOMPLETE\" Delete a front",
+        "description": "Delete a front",
         "options": [
           {
             "type": 3,
             "name": "identifier",
-            "description": "\"AUTOCOMPLETE\" The identifier for the front",
+            "description": "The identifier for the front",
             "required": true,
             "autocomplete": true
           }
