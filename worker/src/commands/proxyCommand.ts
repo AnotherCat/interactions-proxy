@@ -15,16 +15,16 @@ export async function handleProxyCommand(
   // Check types
   if (
     !interaction.data.options ||
-    interaction.data.options[0].type !== ApplicationCommandOptionType.String || // message
-    interaction.data.options[1].type !== ApplicationCommandOptionType.String // front id
+    interaction.data.options[0].type !== ApplicationCommandOptionType.String || // front id
+    interaction.data.options[1].type !== ApplicationCommandOptionType.String // message
   ) {
     throw new InvalidRequest('Incorrect options on "proxy" command')
   }
   if (interaction.guild_id === undefined) {
     throw new ReturnedError("This command can only be used in a server!")
   }
-  const frontId = interaction.data.options[1].value
-  const message = interaction.data.options[0].value
+  const frontId = interaction.data.options[0].value
+  const message = interaction.data.options[1].value
   if (message.length > 2000) {
     throw new ReturnedError(
       `Messages must be 2000 characters or less! That message was ${
