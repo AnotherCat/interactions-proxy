@@ -10,7 +10,7 @@ The Service collects data on demand as it is provided and requested by the users
 
 Data that is collected is, grouped by what is linked:
 
-Users:
+Users:  
 Front data is not retained when the front is deleted, however it will not be deleted from message records.
 
 - User Ids
@@ -24,7 +24,7 @@ Webhooks:
 - Channel ids
 - Webhook authorization details
 
-Messages:
+Messages:  
 This data is not deleted when the related message is deleted. This is to assist servers in anti-abuse and moderation, instead the message is marked as "deleted". This data is not currently publicly accessible after it's deleted. Message content is not stored
 
 - Message Ids
@@ -41,7 +41,8 @@ All data is sent through and processed scripts hosted on Cloudflare workers. Clo
 
 ### Data in logging
 
-When a message is created or removed a log message is sent to a server-specific channel, this data is not retained on our service although we can fetch it from discord. This data includes:
+When a message is created or removed a log message is sent to a server-specific channel, this data is not retained on our service although we can fetch it from discord.  
+This data includes:
 
 - Message Ids
 - Message Content
@@ -82,7 +83,7 @@ You can:
 
 ## How to get your data removed
 
-If you would like us to remove your data please reach out to us and ask.
+If you would like us to remove your data please reach out to us and ask.  
 To remove data in server logging systems please contact your server administrator.
 
 ## Changes to the policy
