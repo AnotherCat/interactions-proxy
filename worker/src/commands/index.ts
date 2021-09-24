@@ -15,7 +15,9 @@ import {
   handleGetMessageInfoSlashCommand,
   handleGetMessageInfoMessageCommand,
   handleGetMessageQuickInfoCommand,
-} from "./messageInfoCommand"
+  handleDeleteMessageMessageCommand,
+  handleDeleteMessageSlashCommand,
+} from "./messageCommands"
 
 import { executeDeferredInteractionHandleErrors } from "../utils"
 export async function handleCommands(
@@ -52,6 +54,21 @@ export async function handleCommands(
               flags: MessageFlags.Ephemeral,
             },
           }
+        case "delete-message":
+          event.waitUntil(
+            executeDeferredInteractionHandleErrors(
+              handleDeleteMessageSlashCommand(
+                interaction as APIChatInputApplicationCommandInteraction,
+              ),
+              interaction,
+            ),
+          )
+          return {
+            type: InteractionResponseType.DeferredChannelMessageWithSource,
+            data: {
+              flags: MessageFlags.Ephemeral,
+            },
+          }
         default:
           throw new InvalidRequest("That application command was not found")
       }
@@ -76,6 +93,21 @@ export async function handleCommands(
           event.waitUntil(
             executeDeferredInteractionHandleErrors(
               handleGetMessageQuickInfoCommand(
+                interaction as APIMessageApplicationCommandInteraction,
+              ),
+              interaction,
+            ),
+          )
+          return {
+            type: InteractionResponseType.DeferredChannelMessageWithSource,
+            data: {
+              flags: MessageFlags.Ephemeral,
+            },
+          }
+        case "Delete Message":
+          event.waitUntil(
+            executeDeferredInteractionHandleErrors(
+              handleDeleteMessageMessageCommand(
                 interaction as APIMessageApplicationCommandInteraction,
               ),
               interaction,

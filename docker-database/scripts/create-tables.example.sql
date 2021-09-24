@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.messages(
     proxy_id varchar(15) not null,
     proxy_name varchar(34) not null,
     proxy_pronouns varchar(102),
+    deleted BOOLEAN DEFAULT FALSE,
     CONSTRAINT UNIQUE_MESSAGE UNIQUE (message_id, channel_id)
 );
 

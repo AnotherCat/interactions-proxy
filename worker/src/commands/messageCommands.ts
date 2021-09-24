@@ -8,12 +8,23 @@ import {
   APIChatInputApplicationCommandInteraction,
   APIMessageApplicationCommandInteraction,
 } from "discord-api-types/v9"
-import { applicationId, modRoleId } from "../consts"
+import {
+  applicationId,
+  logAvatarURL,
+  logChannelId,
+  logUsername,
+  modRoleId,
+} from "../consts"
 import { InternalRequestError, InvalidRequest, ReturnedError } from "../errors"
 import { getFront } from "../fronts"
-import { getMessageFromDatabase } from "../pgData"
+import { getMessageFromDatabase, markMessageDeleted } from "../pgData"
 import { getMessage, getUser, sendDMMessage } from "../discordAPI"
 import { makeMessageURL } from "../utils"
+import {
+  deleteWebhookMessage,
+  getChannelWithWebhook,
+  retryWebhookOnFail,
+} from "../webhook"
 
 async function handleGetMessageInfoSlashCommand(
   interaction: APIChatInputApplicationCommandInteraction,
@@ -189,8 +200,128 @@ async function handleGetMessageQuickInfoCommand(
   }
 }
 
+async function handleDeleteMessageSlashCommand(
+  interaction: APIChatInputApplicationCommandInteraction,
+): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
+  if (
+    !interaction.data.options ||
+    interaction.data.options[0].type !== ApplicationCommandOptionType.Channel || // channel
+    interaction.data.options[1].type !== ApplicationCommandOptionType.String // message id
+  ) {
+    throw new InvalidRequest('Incorrect options on "proxy" command')
+  }
+  if (interaction.guild_id === undefined) {
+    throw new ReturnedError("This command can only be used in a server!")
+  }
+  let message: APIMessage
+  try {
+    message = await getMessage(
+      interaction.data.options[0].value,
+      interaction.data.options[1].value,
+    )
+  } catch (error) {
+    if (error instanceof InternalRequestError) {
+      switch (error.response.status) {
+        case 403:
+          return {
+            content:
+              "I do not have the required permissions in that channel! Please contact the server administrator",
+          }
+        case 404:
+          return {
+            content: "That message could not be found!",
+          }
+        default:
+          throw error
+      }
+    } else {
+      throw error
+    }
+  }
+  return await handleDeleteMessageCommand(interaction, message)
+}
+
+async function handleDeleteMessageMessageCommand(
+  interaction: APIMessageApplicationCommandInteraction,
+): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
+  const message = interaction.data.resolved.messages[interaction.data.target_id]
+  return await handleDeleteMessageCommand(interaction, message)
+}
+
+async function handleDeleteMessageCommand(
+  interaction:
+    | APIMessageApplicationCommandInteraction
+    | APIChatInputApplicationCommandInteraction,
+  message: APIMessage,
+): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
+  if (!interaction.guild_id) {
+    throw new ReturnedError("This command cannot be used in a dm")
+  }
+  const user = (interaction.user || interaction.member?.user)!
+  if (message.webhook_id === undefined) {
+    return {
+      content: "This message was not proxyed through this bot!",
+    }
+  }
+  const messageData = await getMessageFromDatabase(
+    message.id,
+    message.channel_id,
+  )
+  if (!messageData) {
+    return {
+      content: "This message could not be found in the database!",
+    }
+  }
+  if (messageData.account_id !== user.id) {
+    return {
+      content: "You must be the author of this message to delete it!",
+    }
+  }
+  try {
+    await deleteWebhookMessage(interaction.channel_id, message.id)
+  } catch (e) {
+    if (!(e instanceof InternalRequestError)) throw e
+    return {
+      content:
+        "Deleting that message failed. Please contact a moderator to remove it",
+    }
+  }
+  const proxyData = await getFront(messageData.account_id, messageData.proxy_id)
+  const embed: APIEmbed = {
+    title: "Message Deleted",
+    author: {
+      icon_url: proxyData ? proxyData.avatarURL : undefined,
+      name: `Front: ${messageData.proxy_name} (${messageData.proxy_id})`,
+    },
+    description:
+      `Message ${message.id} deleted from <#${message.channel_id}>` +
+      `\n**Content:** ${message.content}` +
+      `\n**Click to open profile:** <discord://-/users/${user.id}>`,
+    footer: {
+      text: `${user.username}#${user.discriminator} (${user.id})`,
+      icon_url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=32`,
+    },
+    color: 15869459,
+    timestamp: new Date(Date.now()).toISOString(),
+  }
+  await markMessageDeleted(message.id, message.channel_id)
+  await retryWebhookOnFail(
+    {
+      embeds: [embed],
+      username: logUsername,
+      avatar_url: logAvatarURL,
+    },
+    await getChannelWithWebhook(logChannelId),
+  )
+  return {
+    content: `Message deleted!`,
+  }
+}
+
 export {
   handleGetMessageInfoMessageCommand,
   handleGetMessageInfoSlashCommand,
   handleGetMessageQuickInfoCommand,
+  handleDeleteMessageMessageCommand,
+  handleDeleteMessageSlashCommand,
 }

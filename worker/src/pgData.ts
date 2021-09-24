@@ -10,6 +10,7 @@ interface storedMessageData {
   proxy_id: string
   proxy_name: string
   proxy_pronouns: string | null
+  deleted: boolean
 }
 
 async function createMessageInDatabase(
@@ -49,7 +50,7 @@ async function getMessageFromDatabase(
 ): Promise<storedMessageData | null> {
   const resp = await fetch(
     `${databaseURL}/messages?message_id=eq.${messageId}&channel_id=eq.${channelId}` +
-      "&select=*,message_id::text,channel_id::text,account_id::text,guild_id::text,log_channel_id::text,log_message_id::text,proxy_id,proxy_name,proxy_pronouns",
+      "&select=*,message_id::text,channel_id::text,account_id::text,guild_id::text,log_channel_id::text,log_message_id::text,proxy_id,proxy_name,proxy_pronouns,deleted",
     {
       method: "GET",
       headers: {
@@ -79,4 +80,30 @@ async function getMessageFromDatabase(
   }
 }
 
-export { createMessageInDatabase, getMessageFromDatabase }
+async function markMessageDeleted(messageId: Snowflake, channelId: Snowflake) {
+  const resp = await fetch(
+    `${databaseURL}/messages?message_id=eq.${messageId}&channel_id=eq.${channelId}`,
+    {
+      body: JSON.stringify({
+        deleted: true,
+      }),
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${databaseAuthToken}`,
+        "Content-Type": "application/json",
+      },
+    },
+  )
+  if (resp.ok) {
+    return
+  } else {
+    if (resp.status >= 500 && resp.status <= 600) {
+      throw new ReturnedError(
+        "The database service could not be accessed at this time. Please contact the developer",
+      )
+    }
+    throw new InternalRequestError(resp.status.toString(), resp)
+  }
+}
+
+export { createMessageInDatabase, getMessageFromDatabase, markMessageDeleted }

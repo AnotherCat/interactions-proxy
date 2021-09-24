@@ -133,7 +133,14 @@ async function sendLogMessage(
   )
 }
 
-async function retryWebhookOnFail(
+export async function deleteWebhookMessage(
+  channelId: Snowflake,
+  messageId: Snowflake,
+) {
+  await deleteMessage(await getChannelWithWebhook(channelId), messageId)
+}
+
+export async function retryWebhookOnFail(
   data: RESTPostAPIWebhookWithTokenJSONBody,
   channel: Channel,
 ): Promise<RESTPostAPIWebhookWithTokenWaitResult> {
@@ -192,6 +199,26 @@ async function executeWebhook(
     )
   }
   return resp.json()
+}
+
+async function deleteMessage(
+  channel: Channel,
+  messageId: Snowflake,
+): Promise<void> {
+  let threadQueryString = ""
+  if (channel.thread) {
+    threadQueryString = `&thread_id=${channel.thread_id}`
+  }
+  const webhookURL = `https://discord.com/api/webhooks/${channel.webhook_id}/${channel.token}/messages/${messageId}${threadQueryString}`
+  const resp = await fetch(webhookURL, {
+    method: "DELETE",
+  })
+  if (!resp.ok) {
+    throw new InternalRequestError(
+      `Deleting your message failed with the status code ${resp.status}`,
+      resp,
+    )
+  }
 }
 
 // webhook stored in the format. Key: "webhook${separatorCharacter}channelid" Data: JSON ChannelStored
@@ -294,7 +321,9 @@ async function getThreadWebhook(
   }
 }
 
-async function getChannelWithWebhook(channelId: Snowflake): Promise<Channel> {
+export async function getChannelWithWebhook(
+  channelId: Snowflake,
+): Promise<Channel> {
   if (await checkCachedMissingPermissions(channelId)) {
     throw new MissingPermissions(missingPermissionsMessage)
   }
