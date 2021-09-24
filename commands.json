@@ -110,5 +110,9 @@
   {
     "type": 3,
     "name": "Get Message Info"
+  },
+  {
+    "type": 3,
+    "name": "Get Message Account"
   }
 ]

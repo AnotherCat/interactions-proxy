@@ -14,6 +14,7 @@ import { handleManageFrontsCommand } from "./manageFrontsCommand"
 import {
   handleGetMessageInfoSlashCommand,
   handleGetMessageInfoMessageCommand,
+  handleGetMessageQuickInfoCommand,
 } from "./messageInfoCommand"
 
 import { executeDeferredInteractionHandleErrors } from "../utils"
@@ -60,6 +61,21 @@ export async function handleCommands(
           event.waitUntil(
             executeDeferredInteractionHandleErrors(
               handleGetMessageInfoMessageCommand(
+                interaction as APIMessageApplicationCommandInteraction,
+              ),
+              interaction,
+            ),
+          )
+          return {
+            type: InteractionResponseType.DeferredChannelMessageWithSource,
+            data: {
+              flags: MessageFlags.Ephemeral,
+            },
+          }
+        case "Get Message Account":
+          event.waitUntil(
+            executeDeferredInteractionHandleErrors(
+              handleGetMessageQuickInfoCommand(
                 interaction as APIMessageApplicationCommandInteraction,
               ),
               interaction,

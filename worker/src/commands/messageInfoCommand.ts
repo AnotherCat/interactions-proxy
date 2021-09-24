@@ -156,4 +156,41 @@ async function handleGetMessageInfoCommand(
   }
 }
 
-export { handleGetMessageInfoMessageCommand, handleGetMessageInfoSlashCommand }
+async function handleGetMessageQuickInfoCommand(
+  interaction: APIMessageApplicationCommandInteraction,
+): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
+  const message = interaction.data.resolved.messages[interaction.data.target_id]
+  if (!interaction.guild_id) {
+    throw new ReturnedError("This command cannot be used in a dm")
+  }
+  const user = (interaction.user || interaction.member?.user)!
+  if (message.webhook_id === undefined) {
+    return {
+      content: "This message was not proxyed through this bot!",
+    }
+  }
+  const messageData = await getMessageFromDatabase(
+    message.id,
+    message.channel_id,
+  )
+  if (!messageData) {
+    return {
+      content: "This message could not be found in the database!",
+    }
+  }
+  return {
+    content: `The author account of [this message](${makeMessageURL(
+      messageData.guild_id,
+      messageData.channel_id,
+      messageData.message_id,
+    )}) is <@${messageData.account_id}> \`<@${
+      messageData.account_id
+    }>\` (copy and paste to ping)`,
+  }
+}
+
+export {
+  handleGetMessageInfoMessageCommand,
+  handleGetMessageInfoSlashCommand,
+  handleGetMessageQuickInfoCommand,
+}
