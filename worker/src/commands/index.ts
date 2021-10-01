@@ -12,11 +12,10 @@ import { InvalidRequest } from "../errors"
 import { handleProxyCommand } from "./proxyCommand"
 import { handleManageFrontsCommand } from "./manageFrontsCommand"
 import {
-  handleGetMessageInfoSlashCommand,
   handleGetMessageInfoMessageCommand,
   handleGetMessageQuickInfoCommand,
   handleDeleteMessageMessageCommand,
-  handleDeleteMessageSlashCommand,
+  handleMessageSlashCommand,
 } from "./messageCommands"
 
 import { executeDeferredInteractionHandleErrors } from "../utils"
@@ -39,25 +38,10 @@ export async function handleCommands(
           return await handleManageFrontsCommand(
             interaction as APIChatInputApplicationCommandInteraction,
           )
-        case "get-message-info":
+        case "message":
           event.waitUntil(
             executeDeferredInteractionHandleErrors(
-              handleGetMessageInfoSlashCommand(
-                interaction as APIChatInputApplicationCommandInteraction,
-              ),
-              interaction,
-            ),
-          )
-          return {
-            type: InteractionResponseType.DeferredChannelMessageWithSource,
-            data: {
-              flags: MessageFlags.Ephemeral,
-            },
-          }
-        case "delete-message":
-          event.waitUntil(
-            executeDeferredInteractionHandleErrors(
-              handleDeleteMessageSlashCommand(
+              handleMessageSlashCommand(
                 interaction as APIChatInputApplicationCommandInteraction,
               ),
               interaction,

@@ -90,41 +90,74 @@
   },
   {
     "type": 1,
-    "name": "get-message-info",
-    "description": "Get the information about a proxyed message",
+    "name": "message",
+    "description": "Message actions",
     "options": [
       {
-        "type": 7,
-        "name": "channel",
-        "description": "The channel that the message is in, must be a text channel",
-        "required": true,
-        "channel_types": [0, 5, 10, 11, 12]
+        "type": 1,
+        "name": "edit",
+        "description": "Edit a message",
+        "options": [
+          {
+            "type": 7,
+            "name": "channel",
+            "description": "The channel that the message is in, must be a text channel",
+            "required": true,
+            "channel_types": [0, 5, 10, 11, 12]
+          },
+          {
+            "type": 3,
+            "name": "message-id",
+            "description": "Id of the message to edit",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "new-content",
+            "description": "Content to update the message with",
+            "required": true
+          }
+        ]
       },
       {
-        "type": 3,
-        "name": "message-id",
-        "description": "Id of the message to get info about",
-        "required": true
-      }
-    ]
-  },
-  {
-    "type": 1,
-    "name": "delete-message",
-    "description": "Delete a message",
-    "options": [
-      {
-        "type": 7,
-        "name": "channel",
-        "description": "The channel that the message is in, must be a text channel",
-        "required": true,
-        "channel_types": [0, 5, 10, 11, 12]
+        "type": 1,
+        "name": "delete",
+        "description": "Delete a message",
+        "options": [
+          {
+            "type": 7,
+            "name": "channel",
+            "description": "The channel that the message is in, must be a text channel",
+            "required": true,
+            "channel_types": [0, 5, 10, 11, 12]
+          },
+          {
+            "type": 3,
+            "name": "message-id",
+            "description": "Id of the message to delete",
+            "required": true
+          }
+        ]
       },
       {
-        "type": 3,
-        "name": "message-id",
-        "description": "Id of the message to delete",
-        "required": true
+        "type": 1,
+        "name": "info",
+        "description": "Get the information about a proxyed message",
+        "options": [
+          {
+            "type": 7,
+            "name": "channel",
+            "description": "The channel that the message is in, must be a text channel",
+            "required": true,
+            "channel_types": [0, 5, 10, 11, 12]
+          },
+          {
+            "type": 3,
+            "name": "message-id",
+            "description": "Id of the message to get info about",
+            "required": true
+          }
+        ]
       }
     ]
   },

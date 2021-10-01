@@ -7,6 +7,7 @@ import {
   ApplicationCommandOptionType,
   APIChatInputApplicationCommandInteraction,
   APIMessageApplicationCommandInteraction,
+  ApplicationCommandInteractionDataOptionSubCommand,
 } from "discord-api-types/v9"
 import {
   applicationId,
@@ -22,17 +23,41 @@ import { getMessage, getUser, sendDMMessage } from "../discordAPI"
 import { makeMessageURL } from "../utils"
 import {
   deleteWebhookMessage,
+  editWebhookMessage,
   getChannelWithWebhook,
   retryWebhookOnFail,
 } from "../webhook"
 
-async function handleGetMessageInfoSlashCommand(
+async function handleMessageSlashCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
   if (
     !interaction.data.options ||
-    interaction.data.options[0].type !== ApplicationCommandOptionType.Channel || // channel
-    interaction.data.options[1].type !== ApplicationCommandOptionType.String // message id
+    interaction.data.options[0].type !== ApplicationCommandOptionType.Subcommand
+  ) {
+    throw new InvalidRequest('Incorrect options on "manage-fronts" command')
+  }
+  switch (interaction.data.options[0].name) {
+    case "edit":
+      return await handleEditMessageSlashCommand(interaction)
+    case "info":
+      return await handleGetMessageInfoSlashCommand(interaction)
+    case "delete":
+      return await handleDeleteMessageSlashCommand(interaction)
+    default:
+      throw new InvalidRequest("That application command was not found")
+  }
+}
+
+async function handleGetMessageInfoSlashCommand(
+  interaction: APIChatInputApplicationCommandInteraction,
+): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
+  const { options } = interaction.data
+    .options![0] as ApplicationCommandInteractionDataOptionSubCommand
+  if (
+    !options ||
+    options[0].type !== ApplicationCommandOptionType.Channel || // channel
+    options[1].type !== ApplicationCommandOptionType.String // message id
   ) {
     throw new InvalidRequest('Incorrect options on "proxy" command')
   }
@@ -41,10 +66,7 @@ async function handleGetMessageInfoSlashCommand(
   }
   let message: APIMessage
   try {
-    message = await getMessage(
-      interaction.data.options[0].value,
-      interaction.data.options[1].value,
-    )
+    message = await getMessage(options[0].value, options[1].value)
   } catch (error) {
     if (error instanceof InternalRequestError) {
       switch (error.response.status) {
@@ -134,7 +156,7 @@ async function handleGetMessageInfoCommand(
   }
   let pronounMessage = ""
   if (messageData.proxy_pronouns) {
-    pronounMessage = `\n\**Pronouns:** ${messageData.proxy_pronouns}`
+    pronounMessage = `\n**Pronouns:** ${messageData.proxy_pronouns}`
   }
   const embed: APIEmbed = {
     title: "Message Information",
@@ -203,10 +225,12 @@ async function handleGetMessageQuickInfoCommand(
 async function handleDeleteMessageSlashCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
+  const { options } = interaction.data
+    .options![0] as ApplicationCommandInteractionDataOptionSubCommand
   if (
-    !interaction.data.options ||
-    interaction.data.options[0].type !== ApplicationCommandOptionType.Channel || // channel
-    interaction.data.options[1].type !== ApplicationCommandOptionType.String // message id
+    !options ||
+    options[0].type !== ApplicationCommandOptionType.Channel || // channel
+    options[1].type !== ApplicationCommandOptionType.String // message id
   ) {
     throw new InvalidRequest('Incorrect options on "proxy" command')
   }
@@ -215,10 +239,7 @@ async function handleDeleteMessageSlashCommand(
   }
   let message: APIMessage
   try {
-    message = await getMessage(
-      interaction.data.options[0].value,
-      interaction.data.options[1].value,
-    )
+    message = await getMessage(options[0].value, options[1].value)
   } catch (error) {
     if (error instanceof InternalRequestError) {
       switch (error.response.status) {
@@ -318,10 +339,113 @@ async function handleDeleteMessageCommand(
   }
 }
 
+async function handleEditMessageSlashCommand(
+  interaction: APIChatInputApplicationCommandInteraction,
+): Promise<RESTPatchAPIInteractionOriginalResponseJSONBody> {
+  if (!interaction.guild_id) {
+    throw new ReturnedError("This command cannot be used in a dm")
+  }
+  const { options } = interaction.data
+    .options![0] as ApplicationCommandInteractionDataOptionSubCommand
+  if (
+    !options ||
+    options[0].type !== ApplicationCommandOptionType.Channel || // channel
+    options[1].type !== ApplicationCommandOptionType.String || // message id
+    options[2].type !== ApplicationCommandOptionType.String // New content
+  ) {
+    throw new InvalidRequest('Incorrect options on "proxy" command')
+  }
+  const newContent = options[2].value
+  if (interaction.guild_id === undefined) {
+    throw new ReturnedError("This command can only be used in a server!")
+  }
+  let message: APIMessage
+  try {
+    message = await getMessage(options[0].value, options[1].value)
+  } catch (error) {
+    if (error instanceof InternalRequestError) {
+      switch (error.response.status) {
+        case 403:
+          return {
+            content:
+              "I do not have the required permissions in that channel! Please contact the server administrator",
+          }
+        case 404:
+          return {
+            content: "That message could not be found!",
+          }
+        default:
+          throw error
+      }
+    } else {
+      throw error
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const user = (interaction.user || interaction.member?.user)!
+  if (message.webhook_id === undefined) {
+    return {
+      content: "This message was not proxyed through this bot!",
+    }
+  }
+  const messageData = await getMessageFromDatabase(
+    message.id,
+    message.channel_id,
+  )
+  if (!messageData) {
+    return {
+      content: "This message could not be found in the database!",
+    }
+  }
+  if (messageData.account_id !== user.id) {
+    return {
+      content: "You must be the author of this message to edit it!",
+    }
+  }
+  try {
+    await editWebhookMessage(interaction.channel_id, message.id, newContent)
+  } catch (e) {
+    if (!(e instanceof InternalRequestError)) throw e
+    return {
+      content: "Editing that message failed",
+    }
+  }
+  const proxyData = await getFront(messageData.account_id, messageData.proxy_id)
+  const embed: APIEmbed = {
+    title: "Message Edited",
+    author: {
+      icon_url: proxyData ? proxyData.avatarURL : undefined,
+      name: `Front: ${messageData.proxy_name} (${messageData.proxy_id})`,
+    },
+    description:
+      `Message ${message.id} edited in <#${message.channel_id}>` +
+      `\n**New Content:** ${newContent}` +
+      `\n**Content:** ${message.content}` +
+      `\n**Click to open profile:** <discord://-/users/${user.id}>`,
+    footer: {
+      text: `${user.username}#${user.discriminator} (${user.id})`,
+      icon_url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=32`,
+    },
+    color: 16753920,
+    timestamp: new Date(Date.now()).toISOString(),
+  }
+  await retryWebhookOnFail(
+    {
+      embeds: [embed],
+      username: logUsername,
+      avatar_url: logAvatarURL,
+    },
+    await getChannelWithWebhook(logChannelId),
+  )
+  return {
+    content: `Message edited!`,
+  }
+}
+
 export {
   handleGetMessageInfoMessageCommand,
-  handleGetMessageInfoSlashCommand,
   handleGetMessageQuickInfoCommand,
   handleDeleteMessageMessageCommand,
-  handleDeleteMessageSlashCommand,
+  handleMessageSlashCommand,
 }

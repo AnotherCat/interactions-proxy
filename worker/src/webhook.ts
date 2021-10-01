@@ -7,6 +7,7 @@ import {
   RESTPostAPIWebhookWithTokenJSONBody,
   Snowflake,
   ChannelType,
+  RESTPatchAPIWebhookWithTokenMessageJSONBody,
 } from "discord-api-types/v9"
 import {
   InternalRequestError,
@@ -136,8 +137,18 @@ async function sendLogMessage(
 export async function deleteWebhookMessage(
   channelId: Snowflake,
   messageId: Snowflake,
-) {
+): Promise<void> {
   await deleteMessage(await getChannelWithWebhook(channelId), messageId)
+}
+
+export async function editWebhookMessage(
+  channelId: Snowflake,
+  messageId: Snowflake,
+  newContent: string,
+): Promise<void> {
+  await editMessage(await getChannelWithWebhook(channelId), messageId, {
+    content: newContent,
+  })
 }
 
 export async function retryWebhookOnFail(
@@ -216,6 +227,29 @@ async function deleteMessage(
   if (!resp.ok) {
     throw new InternalRequestError(
       `Deleting your message failed with the status code ${resp.status}`,
+      resp,
+    )
+  }
+}
+
+async function editMessage(
+  channel: Channel,
+  messageId: Snowflake,
+  data: RESTPatchAPIWebhookWithTokenMessageJSONBody,
+): Promise<void> {
+  let threadQueryString = ""
+  if (channel.thread) {
+    threadQueryString = `&thread_id=${channel.thread_id}`
+  }
+  const webhookURL = `https://discord.com/api/webhooks/${channel.webhook_id}/${channel.token}/messages/${messageId}${threadQueryString}`
+  const resp = await fetch(webhookURL, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+    headers: { "content-type": "application/json" },
+  })
+  if (!resp.ok) {
+    throw new InternalRequestError(
+      `Editing your message failed with the status code ${resp.status}`,
       resp,
     )
   }
