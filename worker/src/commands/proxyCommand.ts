@@ -6,8 +6,9 @@ import {
   MessageFlags,
 } from "discord-api-types/v9"
 import { InvalidRequest, ReturnedError } from "../errors"
+import { checkFiltered } from "../filter"
 import { getFront } from "../fronts"
-import { sendProxyMessage } from "../webhook"
+import { sendFilterMessage, sendProxyMessage } from "../webhook"
 export async function handleProxyCommand(
   interaction: APIChatInputApplicationCommandInteraction,
   event: FetchEvent,
@@ -38,6 +39,23 @@ export async function handleProxyCommand(
     throw new ReturnedError(
       `The front \`${frontId}\`could not be found in the database!`,
     )
+  }
+  const filterMatch = checkFiltered(message)
+  if (filterMatch) {
+    await sendFilterMessage(
+      message,
+      frontData,
+      interaction.channel_id,
+      user,
+      filterMatch,
+    )
+    return {
+      type: InteractionResponseType.ChannelMessageWithSource,
+      data: {
+        content: "Your message contained filtered words! Please don't do that!",
+        flags: MessageFlags.Ephemeral,
+      },
+    }
   }
 
   await sendProxyMessage(

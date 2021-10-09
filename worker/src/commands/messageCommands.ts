@@ -26,7 +26,9 @@ import {
   editWebhookMessage,
   getChannelWithWebhook,
   retryWebhookOnFail,
+  sendFilterMessage,
 } from "../webhook"
+import { checkFiltered } from "../filter"
 
 async function handleMessageSlashCommand(
   interaction: APIChatInputApplicationCommandInteraction,
@@ -403,6 +405,30 @@ async function handleEditMessageSlashCommand(
       content: "You must be the author of this message to edit it!",
     }
   }
+  let proxyData = await getFront(messageData.account_id, messageData.proxy_id)
+  const filterMatch = checkFiltered(newContent)
+  if (filterMatch) {
+    if (!proxyData) {
+      proxyData = {
+        avatarURL: "",
+        username: messageData.proxy_name,
+        accountId: messageData.account_id,
+        pronouns: messageData.proxy_pronouns,
+        id: messageData.proxy_id,
+      }
+    }
+    await sendFilterMessage(
+      newContent,
+      proxyData,
+      interaction.channel_id,
+      user,
+      filterMatch,
+      true,
+    )
+    return {
+      content: "Your message contained filtered words! Please don't do that!",
+    }
+  }
   try {
     await editWebhookMessage(interaction.channel_id, message.id, newContent)
   } catch (e) {
@@ -411,7 +437,7 @@ async function handleEditMessageSlashCommand(
       content: "Editing that message failed",
     }
   }
-  const proxyData = await getFront(messageData.account_id, messageData.proxy_id)
+
   const embed: APIEmbed = {
     title: "Message Edited",
     author: {

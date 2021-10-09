@@ -20,9 +20,12 @@ import {
   logChannelId,
   logUsername,
   applicationId,
+  filterUsername,
+  filterChannelId,
 } from "./consts"
 import { createMessageInDatabase } from "./pgData"
 import { getChannel, makeAPIRequest } from "./discordAPI"
+import { FrontType } from "./fronts"
 const missingPermissionsMessage =
   "The bot does not have the right permissions in this channel! Please contact your server administrator for more detail. \nNote: this message is cached for 10 minutes"
 
@@ -131,6 +134,43 @@ async function sendLogMessage(
       avatar_url: logAvatarURL,
     },
     await getChannelWithWebhook(logChannelId),
+  )
+}
+
+export async function sendFilterMessage(
+  message: string,
+  frontData: FrontType,
+  channel: Snowflake,
+  user: APIUser,
+  filterMatch: string,
+  edit: boolean = false, // False if sending a message, true if editing a message
+): Promise<RESTPostAPIWebhookWithTokenWaitResult> {
+  const embed: APIEmbed = {
+    author: {
+      icon_url: frontData.avatarURL,
+      name: `Front: ${frontData.username} (${frontData.id})`,
+    },
+    description:
+      `${user.username}#${user.discriminator} attempted to ${
+        edit ? "edit" : "send"
+      } a message that triggered the filter in <#${channel}>` +
+      `\n**Content:** ${message}` +
+      `\n**Filtered word**: ${filterMatch}` +
+      `\n**Click to open profile:** <discord://-/users/${user.id}>`,
+    footer: {
+      text: `${user.username}#${user.discriminator} (${user.id})`,
+      icon_url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=32`,
+    },
+    color: 15869459,
+    timestamp: new Date(Date.now()).toISOString(),
+  }
+  return await retryWebhookOnFail(
+    {
+      embeds: [embed],
+      username: filterUsername,
+      avatar_url: logAvatarURL,
+    },
+    await getChannelWithWebhook(filterChannelId),
   )
 }
 

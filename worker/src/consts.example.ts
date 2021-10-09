@@ -1,7 +1,27 @@
-export const DATA_SEPARATOR_CODE = 30
-export const logAvatarURL =
+const DATA_SEPARATOR_CODE = 30
+const logAvatarURL =
   "https://media.discordapp.net/attachments/876756990657982514/876757313896198204/Bots-Avatar.jpeg"
-export const logUsername = "Plural Bot Usage Logs"
-export const logChannelId = "878551279234846720"
-export const applicationId = "849215505536516096"
-export const modRoleId = "878552217383219220"
+const logUsername = "Plural Bot Usage Logs"
+const filterUsername = "Plural Bot Filter Logs"
+
+const applicationId = ""
+
+const logChannelId = ""
+const modRoleId = ""
+const filterChannelId = ""
+
+const regexFilters = [/someregex/]
+const wordFilters = ["filtered-word"]
+
+export {
+  DATA_SEPARATOR_CODE,
+  logAvatarURL,
+  logUsername,
+  applicationId,
+  logChannelId,
+  modRoleId,
+  filterChannelId,
+  regexFilters,
+  wordFilters,
+  filterUsername,
+}
