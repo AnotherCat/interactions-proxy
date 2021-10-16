@@ -17,7 +17,7 @@ services:
   postgrest:
     image: postgrest/postgrest
     restart: always
-    # Expose post 3000 and access postgrest locally by uncommenting 
+    # Expose post 3000 and access postgrest locally by uncommenting
     # the `ports` directive below
     # ports:
     #   - "3000:3000"
@@ -33,7 +33,7 @@ services:
       - postgres
 
   postgres:
-    image: postgres
+    image: postgres:13.4
     restart: always
     environment:
       POSTGRES_DB: db
